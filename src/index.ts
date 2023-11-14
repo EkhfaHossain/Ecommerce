@@ -1,5 +1,5 @@
 import express from "express";
-import pool from "../db";
+import pool from "./db";
 
 const app = express();
 
@@ -19,7 +19,7 @@ app.get("/hello", (req, res) => {
 app.get("/products", async (req, res) => {
   try {
     const products = await pool.query("SELECT * FROM product");
-    res.send(products);
+    res.status(200).send(products);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -27,14 +27,14 @@ app.get("/products", async (req, res) => {
 });
 
 // creating product
-app.post("/create", async (req, res) => {
+app.post("/product/create", async (req, res) => {
   try {
     const { name } = req.body;
     const product = await pool.query(
       "INSERT INTO product (name) VALUES ($1) RETURNING *",
       [name]
     );
-    res.send(product);
+    res.status(200).send(product);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
