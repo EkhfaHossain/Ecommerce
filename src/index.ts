@@ -44,10 +44,11 @@ app.get("/products/:id", async (req, res) => {
 // For Creating Product
 app.post("/product/create", async (req, res) => {
   try {
-    const { name } = req.body;
+    const { title, description, categories, quantity, price } = req.body;
+
     const product = await pool.query(
-      "INSERT INTO product (name) VALUES ($1) RETURNING *",
-      [name]
+      "INSERT INTO product (title, description, categories, quantity, price) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [title, description, categories, quantity, price]
     );
     res.status(200).json(product.rows[0]);
   } catch (error) {
@@ -59,11 +60,12 @@ app.post("/product/create", async (req, res) => {
 // For Updating Product
 app.put("/product/update/:id", async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { title, description, categories, quantity, price } = req.body;
+
   try {
     const updateProduct = await pool.query(
-      "UPDATE product SET name = $1 WHERE product_id = $2 RETURNING *",
-      [name, id]
+      "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5 WHERE product_id = $6 RETURNING *",
+      [title, description, categories, quantity, price, id]
     );
     res.status(200).json(updateProduct.rows[0]);
   } catch (error) {
