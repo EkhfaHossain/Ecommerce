@@ -15,11 +15,26 @@ app.get("/hello", (req, res) => {
   }
 });
 
-// Getting the Product
+// Getting all the Product
 app.get("/products", async (req, res) => {
   try {
     const products = await pool.query("SELECT * FROM product");
-    res.status(200).send(products);
+    res.status(200).json(products.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//getting individual product
+app.get("/products/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await pool.query(
+      "SELECT * FROM product WHERE product_id = $1",
+      [id]
+    );
+    res.status(200).json(product.rows[0]);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -34,7 +49,23 @@ app.post("/product/create", async (req, res) => {
       "INSERT INTO product (name) VALUES ($1) RETURNING *",
       [name]
     );
-    res.status(200).send(product);
+    res.status(200).json(product.rows[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//For Updating Product
+app.put("/product/update/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  try {
+    const updateProduct = await pool.query(
+      "UPDATE product SET name = $1 WHERE product_id = $2 RETURNING *",
+      [name, id]
+    );
+    res.status(200).json(updateProduct.rows[0]);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
