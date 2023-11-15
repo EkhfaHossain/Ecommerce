@@ -15,7 +15,7 @@ app.get("/hello", (req, res) => {
   }
 });
 
-// Getting all the Product
+// For Getting all the Products
 app.get("/products", async (req, res) => {
   try {
     const products = await pool.query("SELECT * FROM product");
@@ -26,7 +26,7 @@ app.get("/products", async (req, res) => {
   }
 });
 
-//getting individual product
+// For Getting Single Product
 app.get("/products/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -41,7 +41,7 @@ app.get("/products/:id", async (req, res) => {
   }
 });
 
-// creating product
+// For Creating Product
 app.post("/product/create", async (req, res) => {
   try {
     const { name } = req.body;
@@ -56,7 +56,7 @@ app.post("/product/create", async (req, res) => {
   }
 });
 
-//For Updating Product
+// For Updating Product
 app.put("/product/update/:id", async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -66,6 +66,21 @@ app.put("/product/update/:id", async (req, res) => {
       [name, id]
     );
     res.status(200).json(updateProduct.rows[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// For Deleting Product
+app.delete("/product/delete/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleteProduct = await pool.query(
+      "DELETE FROM product WHERE product_id = $1",
+      [id]
+    );
+    res.status(200).json("Deleted Sucessfully!");
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
