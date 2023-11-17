@@ -5,9 +5,13 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  testRoute,
 } from "../controller/productsController";
 
 const router: Router = express.Router();
+
+// Test Route
+router.get("/", testRoute);
 
 // For Getting all the Products
 router.get("/products", getAllProducts);

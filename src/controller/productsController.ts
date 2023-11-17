@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import pool from "../db";
+import pool from "../configs/db";
 
 export const testRoute = (req: Request, res: Response) => {
   try {
@@ -27,6 +27,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
 export const getSingleProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
+
   try {
     const product = await pool.query(
       "SELECT * FROM product WHERE product_id = $1",
@@ -93,6 +94,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 export const deleteProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
+
   try {
     const deleteProduct = await pool.query(
       "DELETE FROM product WHERE product_id = $1",
