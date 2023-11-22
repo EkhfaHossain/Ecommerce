@@ -20,6 +20,8 @@ const config: Config = {
       bermuda: "#78dcca",
       lightBlue: "#e0f2fe",
       borderColor: "#7dd3fc",
+      buttonColor: "#1da1f2",
+      navColor: "#0284c7",
     },
     extend: {
       backgroundImage: {

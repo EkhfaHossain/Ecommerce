@@ -8,3 +8,6 @@ CREATE TABLE product(
     quantity DECIMAL(10, 2), 
     price DECIMAL(10, 2)
 );
+
+ALTER TABLE product
+RENAME COLUMN product_id TO id;

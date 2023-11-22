@@ -29,10 +29,9 @@ export const getSingleProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const product = await pool.query(
-      "SELECT * FROM product WHERE product_id = $1",
-      [id]
-    );
+    const product = await pool.query("SELECT * FROM product WHERE id = $1", [
+      id,
+    ]);
 
     if (product.rows.length === 0) {
       return res.status(404).json({ error: "Product not found" });
@@ -77,7 +76,7 @@ export const updateProduct = async (req: Request, res: Response) => {
   try {
     const { title, description, categories, quantity, price } = req.body;
     const updateProduct = await pool.query(
-      "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5 WHERE product_id = $6 RETURNING *",
+      "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5 WHERE id = $6 RETURNING *",
       [title, description, categories, quantity, price, id]
     );
 
@@ -97,7 +96,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
 
   try {
     const deleteProduct = await pool.query(
-      "DELETE FROM product WHERE product_id = $1",
+      "DELETE FROM product WHERE id = $1",
       [id]
     );
 
