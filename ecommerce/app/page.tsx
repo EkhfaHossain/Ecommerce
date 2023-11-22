@@ -1,8 +1,12 @@
 import React from "react";
-import ListProducts from "@/components/ListProducts";
+import ListProducts from "@/app/products/page";
 
 const HomePage = async () => {
-  return <ListProducts />;
+  return (
+    <>
+      <ListProducts />;
+    </>
+  );
 };
 
 export default HomePage;
