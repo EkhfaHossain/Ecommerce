@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
+import Card from "@/components/Card";
 
 interface Product {
   id: number;
@@ -35,30 +36,30 @@ const ListProducts = () => {
       <div className="max-w-screen-xl container mx-auto px-4">
         <div className="md:flex-row -mx-4 flex flex-wrap">
           {products.map((product) => (
-            <div
-              key={product.id}
-              className="md:w-1/2 lg:w-1/3 xl:w-1/4 mb-4 w-full px-4"
-            >
+            <Card key={product.id}>
               <Link href={`/products/${product.id}`} passHref>
-                <div className="overflow-hidden rounded-lg shadow-lg border border-borderColor">
-                  <div className="p-6 flex flex-col justify-between">
+                <div className="flex flex-col h-full justify-between">
+                  <div>
                     <h2 className="text-xl font-semibold">{product.id}</h2>
                     <h2 className="text-xl font-semibold">{product.title}</h2>
                     <p className="mt-2 text-md">
                       Category: {product.categories}
                     </p>
-                    <p className="mt-2 text-lg">{product.description}</p>
+                    <p className="mt-2 text-lg">
+                      {product.description.substring(0, 25)}...
+                    </p>
                     <p className="mt-2 text-lg font-semibold">
                       ${product.price}
                     </p>
-
-                    <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md self-end">
+                  </div>
+                  <div className="self-end">
+                    <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
                       Buy Now
                     </button>
                   </div>
                 </div>
               </Link>
-            </div>
+            </Card>
           ))}
         </div>
       </div>
