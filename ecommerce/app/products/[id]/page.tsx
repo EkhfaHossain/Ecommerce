@@ -34,6 +34,20 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
     fetchSingleProduct();
   }, [params.id]);
 
+  const handleDelete = async () => {
+    try {
+      if (product && product.id) {
+        const deleteProduct = await axios.delete(
+          `http://localhost:9090/product/delete/${product.id}`
+        );
+        console.log("Product deleted successfully");
+        setProduct(deleteProduct.data);
+      }
+    } catch (error) {
+      console.log("Error Deleting Product", error);
+    }
+  };
+
   return (
     <section className="py-12">
       <div className="max-w-screen-xl container mx-auto px-4">
@@ -52,9 +66,16 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                       ${product.price}
                     </p>
                   </div>
-                  <div className="self-end">
+
+                  <div className="flex justify-between">
                     <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
-                      Buy Now
+                      Update
+                    </button>
+                    <button
+                      className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
+                      onClick={handleDelete}
+                    >
+                      Delete
                     </button>
                   </div>
                 </div>
