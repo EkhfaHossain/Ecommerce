@@ -46,7 +46,7 @@ export const getSingleProduct = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { title, description, categories, quantity, price } = req.body;
+    const { title, description, categories, quantity, price, image } = req.body;
 
     if (!title || !description || !categories || !quantity || !price) {
       return res
@@ -55,8 +55,8 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     const product = await pool.query(
-      "INSERT INTO product (title, description, categories, quantity, price) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [title, description, categories, quantity, price]
+      "INSERT INTO product (title, description, categories, quantity, price, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [title, description, categories, quantity, price, image]
     );
 
     if (product.rowCount === 0) {
@@ -74,10 +74,10 @@ export const updateProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const { title, description, categories, quantity, price } = req.body;
+    const { image, title, description, categories, quantity, price } = req.body;
     const updateProduct = await pool.query(
-      "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5 WHERE id = $6 RETURNING *",
-      [title, description, categories, quantity, price, id]
+      "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5, image = $6 WHERE id = $7 RETURNING *",
+      [title, description, categories, quantity, price, image, id]
     );
 
     if (updateProduct.rowCount === 0) {

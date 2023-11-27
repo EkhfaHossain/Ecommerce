@@ -11,3 +11,6 @@ CREATE TABLE product(
 
 ALTER TABLE product
 RENAME COLUMN product_id TO id;
+
+ALTER TABLE product
+ADD image VARCHAR(255);
