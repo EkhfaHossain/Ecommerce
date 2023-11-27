@@ -7,6 +7,7 @@ import Card from "@/components/Card";
 
 interface Product {
   id: number;
+  image: string;
   title: string;
   description: string;
   categories: string;
@@ -39,7 +40,14 @@ const ListProducts = () => {
             <Card key={product.id}>
               <Link href={`/products/${product.id}`} passHref>
                 <div className="flex flex-col h-full justify-between">
-                  <div>
+                  <div className="bg-sky-300">
+                    <img
+                      className="object-fill h-48 w-96"
+                      src={product.image ? product.image : "/no-image.jpeg"}
+                    />
+                  </div>
+
+                  <div className="mt-4">
                     <h2 className="text-xl font-semibold">{product.title}</h2>
                     <p className="mt-2 text-md">
                       Category: {product.categories}

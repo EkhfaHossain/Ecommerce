@@ -3,8 +3,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Card from "@/components/Card";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Product {
+  image: string;
   id: number;
   title: string;
   description: string;
@@ -56,7 +58,14 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
             <Card>
               <Link href={`/products/${product.id}`} passHref>
                 <div className="flex flex-col h-full justify-between">
-                  <div>
+                  <div className="bg-sky-300">
+                    <img
+                      className="object-fill h-48 w-96"
+                      src={product.image ? product.image : "/no-image.jpeg"}
+                    />
+                  </div>
+
+                  <div className="mt-4">
                     <h2 className="text-xl font-semibold">{product.title}</h2>
                     <p className="mt-2 text-md">
                       Category: {product.categories}
