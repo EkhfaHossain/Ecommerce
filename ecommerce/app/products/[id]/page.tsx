@@ -68,9 +68,11 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                   </div>
 
                   <div className="flex justify-between">
-                    <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
-                      Update
-                    </button>
+                    <Link href={`/products/update/${product.id}`} passHref>
+                      <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
+                        Update
+                      </button>
+                    </Link>
                     <button
                       className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
                       onClick={handleDelete}

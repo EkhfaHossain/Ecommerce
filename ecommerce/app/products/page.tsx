@@ -40,7 +40,6 @@ const ListProducts = () => {
               <Link href={`/products/${product.id}`} passHref>
                 <div className="flex flex-col h-full justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold">{product.id}</h2>
                     <h2 className="text-xl font-semibold">{product.title}</h2>
                     <p className="mt-2 text-md">
                       Category: {product.categories}

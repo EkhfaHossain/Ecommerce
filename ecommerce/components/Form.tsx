@@ -1,87 +1,26 @@
 "use client";
-import React, { useState, ChangeEvent } from "react";
-import axios from "axios";
-
-interface Product {
-  title: string;
-  description: string;
-  categories: string;
-  price: number;
-  quantity: number;
-}
+import React from "react";
 
 const Form: React.FC = () => {
-  const [formData, setFormData] = useState<Product>({
-    title: "",
-    price: 0,
-    categories: "",
-    quantity: 0,
-    description: "",
-  });
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("formDataTesting", formData);
-
-    try {
-      const response = await axios.post(
-        "http://localhost:9090/product/create",
-        formData
-      );
-      console.log("Product submitted:", response.data);
-      setFormData({
-        title: "",
-        price: 0,
-        categories: "",
-        quantity: 0,
-        description: "",
-      });
-    } catch (error) {
-      console.error("An error occurred", error);
-    }
-  };
-
-  const handleInputChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    //console.log("Input Changed - Name:", name, "Value:", value);
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: name === "item-quantity" ? String(value) : value,
-    }));
-  };
-
-  const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
-    //console.log("Category Changed:", value);
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      categories: value,
-    }));
-  };
-
   return (
     <section className="bg-white dark:bg-gray-900">
       <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
         <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
           Add a new product
         </h2>
-        <form onSubmit={handleSubmit}>
+        <form>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
             <div className="sm:col-span-2">
               <label
-                htmlFor="title"
+                htmlFor="name"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
               >
                 Product Name
               </label>
               <input
                 type="text"
-                name="title"
-                id="title"
-                value={formData.title}
-                onChange={handleInputChange}
+                name="name"
+                id="name"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                 placeholder="Type product name"
                 required
@@ -99,8 +38,6 @@ const Form: React.FC = () => {
                 type="number"
                 name="price"
                 id="price"
-                value={formData.price}
-                onChange={handleInputChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                 placeholder="$2999"
                 required
@@ -108,38 +45,35 @@ const Form: React.FC = () => {
             </div>
             <div>
               <label
-                htmlFor="categories"
+                htmlFor="category"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
               >
                 Category
               </label>
               <select
-                id="categories"
-                value={formData.categories}
-                onChange={handleCategoryChange}
+                id="category"
+                defaultValue="Select category"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 sm:w-full"
               >
                 <option disabled hidden>
                   Select category
                 </option>
-                <option value="Groceries">Groceries</option>
-                <option value="Sports">Sports</option>
-                <option value="Snacks">Snacks</option>
+                <option value="GROCERIES">Groceries</option>
+                <option value="SPORTS">Sports</option>
+                <option value="SNACKS">Snacks</option>
               </select>
             </div>
             <div>
               <label
-                htmlFor="quantity"
+                htmlFor="item-quantity"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
               >
                 Quantity
               </label>
               <input
                 type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleInputChange}
-                id="quantity"
+                name="item-quantity"
+                id="item-quantity"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                 placeholder="12"
                 required
@@ -153,11 +87,8 @@ const Form: React.FC = () => {
                 Description
               </label>
               <textarea
-                name="description"
                 id="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
+                rows={8}
                 className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                 placeholder="Your description here"
               ></textarea>
