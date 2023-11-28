@@ -43,7 +43,11 @@ const ListProducts = () => {
                   <div className="bg-sky-300">
                     <img
                       className="object-fill h-48 w-96"
-                      src={product.image ? product.image : "/no-image.jpeg"}
+                      src={
+                        product.image
+                          ? "http://localhost:9090/images/" + product.image
+                          : "http://localhost:9090/images/no-image.jpeg"
+                      }
                     />
                   </div>
 
