@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import productRoutes from "./routes/productRoutes";
+import path from "path";
 
 const app = express();
 
@@ -12,7 +13,9 @@ app.use(
     credentials: true,
   })
 );
-
+// serve static files from public folder
+app.use(express.static("public"));
+app.use("/images", express.static("images"));
 app.use("/", productRoutes);
 
 const PORT = process.env.PORT || 9090;

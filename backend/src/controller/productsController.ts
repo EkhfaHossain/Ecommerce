@@ -1,4 +1,6 @@
 import { type Request, type Response } from "express";
+import multer, { Multer } from "multer";
+import path from "path";
 import pool from "../configs/db";
 
 export const testRoute = (req: Request, res: Response) => {
@@ -46,26 +48,53 @@ export const getSingleProduct = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { title, description, categories, quantity, price, image } = req.body;
+    // File upload handling
+    const storage = multer.diskStorage({
+      destination: function (_req, _file, cb) {
+        cb(null, "public/images");
+      },
+      filename: function (_req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+      },
+    });
 
-    if (!title || !description || !categories || !quantity || !price) {
-      return res
-        .status(400)
-        .json({ error: "Please provide all the required fields" });
-    }
+    const upload = multer({ storage }).single("image");
 
-    const product = await pool.query(
-      "INSERT INTO product (title, description, categories, quantity, price, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [title, description, categories, quantity, price, image]
-    );
+    upload(req, res, async function (err: any) {
+      if (err instanceof multer.MulterError) {
+        return res
+          .status(400)
+          .json({ error: "File upload error: " + err.message });
+      } else if (err) {
+        return res.status(400).json({ error: "File upload error" });
+      }
+      const imgUrl = req.file?.filename;
 
-    if (product.rowCount === 0) {
-      return res.status(500).json({ error: "Failed to create product" });
-    }
+      const { title, description, categories, quantity, price } = req.body;
 
-    res.status(200).json(product.rows[0]);
+      if (!title || !description || !categories || !quantity || !price) {
+        return res
+          .status(400)
+          .json({ error: "Please provide all the required fields" });
+      }
+
+      const insertQuery =
+        "INSERT INTO product (title, description, categories, quantity, price, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
+      const values = [title, description, categories, quantity, price, imgUrl];
+
+      // Execute the database query
+      pool.query(insertQuery, values, (err, result) => {
+        if (err) {
+          console.error("Error inserting product:", err);
+          return res.status(500).json({ error: "Failed to create product" });
+        }
+
+        const createdProduct = result.rows[0];
+        res.status(200).json(createdProduct);
+      });
+    });
   } catch (error) {
-    console.log(error);
+    console.error("Internal Server Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
