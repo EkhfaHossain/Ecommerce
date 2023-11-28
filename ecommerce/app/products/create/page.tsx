@@ -8,6 +8,7 @@ interface Product {
   categories: string;
   price: number;
   quantity: number;
+  image: File | null | string;
 }
 
 const Form: React.FC = () => {
@@ -17,6 +18,7 @@ const Form: React.FC = () => {
     categories: "",
     quantity: 0,
     description: "",
+    image: null,
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -24,9 +26,20 @@ const Form: React.FC = () => {
     console.log("formDataTesting", formData);
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("price", formData.price.toString());
+      formDataToSend.append("categories", formData.categories);
+      formDataToSend.append("quantity", formData.quantity.toString());
+      formDataToSend.append("description", formData.description);
+
+      if (formData.image instanceof File) {
+        formDataToSend.append("image", formData.image);
+      }
+
       const response = await axios.post(
         "http://localhost:9090/product/create",
-        formData
+        formDataToSend
       );
       console.log("Product submitted:", response.data);
       setFormData({
@@ -35,6 +48,7 @@ const Form: React.FC = () => {
         categories: "",
         quantity: 0,
         description: "",
+        image: null,
       });
     } catch (error) {
       console.error("An error occurred", error);
@@ -61,6 +75,16 @@ const Form: React.FC = () => {
     }));
   };
 
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+
+    if (file) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        image: file,
+      }));
+    }
+  };
   return (
     <section className="bg-white dark:bg-gray-900">
       <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
@@ -70,6 +94,20 @@ const Form: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
             <div className="sm:col-span-2">
+              <label
+                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                htmlFor="file_input"
+              >
+                Upload file
+              </label>
+              <input
+                id="file_input"
+                type="file"
+                accept="image/*" // Restrict to image files
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+              />
+
               <label
                 htmlFor="title"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
