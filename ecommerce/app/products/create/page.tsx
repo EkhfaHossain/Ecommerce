@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useRef } from "react";
 import axios from "axios";
 
 interface Product {
@@ -20,6 +20,7 @@ const Form: React.FC = () => {
     description: "",
     image: null,
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,6 +51,9 @@ const Form: React.FC = () => {
         description: "",
         image: null,
       });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Clear file input field
+      }
     } catch (error) {
       console.error("An error occurred", error);
     }
@@ -62,16 +66,7 @@ const Form: React.FC = () => {
     //console.log("Input Changed - Name:", name, "Value:", value);
     setFormData((prevFormData) => ({
       ...prevFormData,
-      [name]: name === "item-quantity" ? String(value) : value,
-    }));
-  };
-
-  const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
-    //console.log("Category Changed:", value);
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      categories: value,
+      [name]: value,
     }));
   };
 
@@ -85,10 +80,11 @@ const Form: React.FC = () => {
       }));
     }
   };
+
   return (
     <section className="bg-white dark:bg-gray-900">
-      <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
-        <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+      <div className="py-4 px-4 mx-auto max-w-2xl lg:py-8">
+        <h2 className="mb-4 text-xl font-bold text-center text-gray-900 dark:text-white">
           Add a new product
         </h2>
         <form onSubmit={handleSubmit}>
@@ -98,35 +94,37 @@ const Form: React.FC = () => {
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 htmlFor="file_input"
               >
-                Upload file
+                Upload Your Picture
               </label>
               <input
+                ref={fileInputRef}
                 id="file_input"
                 type="file"
                 accept="image/*" // Restrict to image files
                 onChange={handleFileChange}
-                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                className="block w-full text-lg text-gray-900 border border-gray-300 rounded-sm cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               />
-
-              <label
-                htmlFor="title"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Product Name
-              </label>
-              <input
-                type="text"
-                name="title"
-                id="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                placeholder="Type product name"
-                required
-              />
+              <div className="mt-6">
+                <label
+                  htmlFor="title"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  id="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                  placeholder="Type product name"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="w-full">
+            <div>
               <label
                 htmlFor="price"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -151,19 +149,16 @@ const Form: React.FC = () => {
               >
                 Category
               </label>
-              <select
+              <input
+                type="text"
+                name="categories"
                 id="categories"
                 value={formData.categories}
-                onChange={handleCategoryChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 sm:w-full"
-              >
-                <option disabled hidden>
-                  Select category
-                </option>
-                <option value="Groceries">Groceries</option>
-                <option value="Sports">Sports</option>
-                <option value="Snacks">Snacks</option>
-              </select>
+                onChange={handleInputChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                placeholder="Type product Category"
+                required
+              />
             </div>
             <div>
               <label
@@ -201,12 +196,14 @@ const Form: React.FC = () => {
               ></textarea>
             </div>
           </div>
-          <button
-            type="submit"
-            className="inline-flex items-center px-5 py-2.5 mt-4 sm:mt-6 text-sm font-medium text-center text-white bg-primary-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800"
-          >
-            Submit
-          </button>
+          <div className="flex justify-center items-center h-full">
+            <button
+              type="submit"
+              className="inline-flex items-center px-5 py-2.5 mt-4 sm:mt-6 text-sm font-medium text-center text-white bg-primary-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800 mx-auto"
+            >
+              Submit
+            </button>
+          </div>
         </form>
       </div>
     </section>
