@@ -1,5 +1,6 @@
 import { type Request, type Response } from "express";
-import multer, { Multer } from "multer";
+import multer from "multer";
+import fs from "fs";
 import path from "path";
 import pool from "../configs/db";
 
@@ -124,6 +125,34 @@ export const deleteProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
+    const getImage = await pool.query(
+      "SELECT image FROM product WHERE id = $1",
+      [id]
+    );
+    const product = getImage.rows[0];
+    if (!product || !product.image) {
+      return res
+        .status(404)
+        .json({ error: "Product not found or image URL missing" });
+    }
+
+    const imgUrl = product.image;
+    console.log(imgUrl);
+    const imagePath = path.join(__dirname, "../../public/images", imgUrl);
+    console.log(imagePath);
+
+    if (fs.existsSync(imagePath)) {
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error("Error deleting file:", err);
+          return res.status(500).json({ error: "Error deleting image file" });
+        }
+        console.log("File deleted successfully");
+      });
+    } else {
+      console.error("File not found:", imagePath);
+    }
+
     const deleteProduct = await pool.query(
       "DELETE FROM product WHERE id = $1",
       [id]
