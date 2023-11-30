@@ -104,17 +104,78 @@ export const updateProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const { image, title, description, categories, quantity, price } = req.body;
-    const updateProduct = await pool.query(
-      "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5, image = $6 WHERE id = $7 RETURNING *",
-      [title, description, categories, quantity, price, image, id]
+    const getImage = await pool.query(
+      "SELECT image FROM product WHERE id = $1",
+      [id]
     );
+    const product = getImage.rows[0];
+    const oldImgUrl = product.image;
+    console.log("Old Image", oldImgUrl);
 
-    if (updateProduct.rowCount === 0) {
-      return res.status(404).json({ error: "Product doesn't exist" });
-    }
+    const storage = multer.diskStorage({
+      destination: function (_req, _file, cb) {
+        cb(null, "public/images");
+      },
+      filename: function (_req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+      },
+    });
 
-    res.status(200).json(updateProduct.rows[0]);
+    const upload = multer({ storage }).single("image");
+
+    upload(req, res, async function (err: any) {
+      if (err instanceof multer.MulterError) {
+        return res
+          .status(400)
+          .json({ error: "File upload error: " + err.message });
+      } else if (err) {
+        return res.status(400).json({ error: "File upload error" });
+      }
+
+      let newImgUrl = req.file?.filename;
+
+      // Triggers when there is no new image upload
+      if (!newImgUrl) {
+        newImgUrl = oldImgUrl;
+      }
+      // Triggers when a new Image is uploaded & Deleting the previous Image
+      else {
+        const imagePath = path.join(
+          __dirname,
+          "../../public/images",
+          oldImgUrl
+        );
+        console.log(imagePath);
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlink(imagePath, (err) => {
+            if (err) {
+              console.error("Error deleting file:", err);
+              return res
+                .status(500)
+                .json({ error: "Error deleting image file" });
+            }
+            console.log("File deleted successfully");
+          });
+        } else {
+          console.error("File not found:", imagePath);
+        }
+      }
+
+      console.log("New Image: ", newImgUrl);
+
+      const { title, description, categories, quantity, price } = req.body;
+      const updateProduct = await pool.query(
+        "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5, image = $6 WHERE id = $7 RETURNING *",
+        [title, description, categories, quantity, price, newImgUrl, id]
+      );
+
+      if (updateProduct.rowCount === 0) {
+        return res.status(404).json({ error: "Product doesn't exist" });
+      }
+
+      res.status(200).json(updateProduct.rows[0]);
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -130,10 +191,9 @@ export const deleteProduct = async (req: Request, res: Response) => {
       [id]
     );
     const product = getImage.rows[0];
-    if (!product || !product.image) {
-      return res
-        .status(404)
-        .json({ error: "Product not found or image URL missing" });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
     }
 
     const imgUrl = product.image;
