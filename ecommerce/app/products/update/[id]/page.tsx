@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, ChangeEvent } from "react";
+import { redirect } from "next/navigation";
 import axios from "axios";
 
 interface Product {
@@ -8,17 +9,24 @@ interface Product {
   categories: string;
   price: number;
   quantity: number;
+  image: File | null | string;
 }
 
 const Update = ({ params }: { params: { id: number } }) => {
+  //const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<Product>({
     title: "",
     description: "",
     categories: "",
     price: 0,
     quantity: 0,
+    image: null,
   });
+
+  console.log("Product: ", product);
 
   useEffect(() => {
     const fetchSingleProduct = async () => {
@@ -29,7 +37,6 @@ const Update = ({ params }: { params: { id: number } }) => {
           );
           setProduct(response.data);
           setFormData(response.data);
-          console.log(response.data);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -41,14 +48,33 @@ const Update = ({ params }: { params: { id: number } }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     try {
+      setIsSaving(true);
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("price", formData.price.toString());
+      formDataToSend.append("categories", formData.categories);
+      formDataToSend.append("quantity", formData.quantity.toString());
+      formDataToSend.append("description", formData.description);
+
+      if (formData.image instanceof File) {
+        formDataToSend.append("image", formData.image);
+      }
+
       const response = await axios.put(
         `http://localhost:9090/product/update/${params.id}`,
-        formData
+        formDataToSend
       );
+
       console.log("Product updated:", response.data);
+      setTimeout(() => {
+        redirect(`/products/${params.id}`); // Redirect to single product page
+      }, 2000);
     } catch (error) {
       console.error("An error occurred while updating:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -63,39 +89,84 @@ const Update = ({ params }: { params: { id: number } }) => {
       [name]: value,
     }));
   };
-  const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = e.target;
-    //console.log("Category Changed:", value);
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      categories: value,
-    }));
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+
+    if (file) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        image: file,
+      }));
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+        console.log(setImagePreview);
+      };
+      reader.readAsDataURL(file);
+    }
   };
+
   return (
     <section className="bg-white dark:bg-gray-900">
-      <div className="py-8 px-4 mx-auto max-w-2xl lg:py-16">
-        <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+      <div className="py-4 px-4 mx-auto max-w-2xl lg:py-8">
+        <h2 className="mb-4 text-xl font-bold text-center text-gray-900 dark:text-white">
           Update product
         </h2>
+        {product && (
+          <div className="mt-6">
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Current Product Image
+            </label>
+            <img
+              className="object-fill h-24 w-24"
+              src={
+                imagePreview
+                  ? imagePreview
+                  : product && product.image
+                  ? "http://localhost:9090/images/" + product.image
+                  : "http://localhost:9090/images/no-image.jpeg"
+              }
+              alt="Product Preview"
+            />
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 mt-4">
             <div className="sm:col-span-2">
               <label
-                htmlFor="title"
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                htmlFor="file_input"
               >
-                Product Name
+                Upload Your Product Picture
               </label>
+
               <input
-                type="text"
-                name="title"
-                id="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                placeholder="Type product name"
-                required
+                id="file_input"
+                type="file"
+                accept="image/*" // Restrict to image files
+                onChange={handleFileChange}
+                className="block w-full text-lg text-gray-900 border border-gray-300 rounded-sm cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               />
+              <div className="mt-6">
+                <label
+                  htmlFor="title"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  id="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                  placeholder="Type product name"
+                  required
+                />
+              </div>
             </div>
 
             <div className="w-full">
@@ -123,19 +194,16 @@ const Update = ({ params }: { params: { id: number } }) => {
               >
                 Category
               </label>
-              <select
+              <input
+                type="text"
                 id="categories"
+                name="categories"
                 value={formData.categories}
-                onChange={handleCategoryChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 sm:w-full"
-              >
-                <option disabled hidden>
-                  Select category
-                </option>
-                <option value="Groceries">Groceries</option>
-                <option value="Sports">Sports</option>
-                <option value="Snacks">Snacks</option>
-              </select>
+                onChange={handleInputChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                placeholder="Type product Category"
+                required
+              />
             </div>
             <div>
               <label
@@ -173,12 +241,15 @@ const Update = ({ params }: { params: { id: number } }) => {
               ></textarea>
             </div>
           </div>
-          <button
-            type="submit"
-            className="inline-flex items-center px-5 py-2.5 mt-4 sm:mt-6 text-sm font-medium text-center text-white bg-primary-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800"
-          >
-            Save
-          </button>
+          <div className="flex justify-center items-center h-full">
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="inline-flex items-center px-5 py-2.5 mt-4 sm:mt-6 text-sm font-medium text-center text-white bg-primary-700 rounded-lg focus:ring-4 focus:ring-primary-200 dark:focus:ring-primary-900 hover:bg-primary-800"
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
+          </div>
         </form>
       </div>
     </section>
