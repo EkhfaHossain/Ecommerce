@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, ChangeEvent } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 
 interface Product {
@@ -13,7 +13,7 @@ interface Product {
 }
 
 const Update = ({ params }: { params: { id: number } }) => {
-  //const router = useRouter();
+  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,7 +69,7 @@ const Update = ({ params }: { params: { id: number } }) => {
 
       console.log("Product updated:", response.data);
       setTimeout(() => {
-        redirect(`/products/${params.id}`); // Redirect to single product page
+        router.push(`/products/${params.id}`); // Redirect to single product page
       }, 2000);
     } catch (error) {
       console.error("An error occurred while updating:", error);
@@ -115,7 +115,7 @@ const Update = ({ params }: { params: { id: number } }) => {
           Update product
         </h2>
         {product && (
-          <div className="mt-6">
+          <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Current Product Image
             </label>
@@ -134,7 +134,7 @@ const Update = ({ params }: { params: { id: number } }) => {
         )}
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 mt-4">
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 flex flex-col">
               <label
                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 htmlFor="file_input"
@@ -149,43 +149,45 @@ const Update = ({ params }: { params: { id: number } }) => {
                 onChange={handleFileChange}
                 className="block w-full text-lg text-gray-900 border border-gray-300 rounded-sm cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
               />
-              <div className="mt-6">
-                <label
-                  htmlFor="title"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  id="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                  placeholder="Type product name"
-                  required
-                />
-              </div>
-            </div>
+              <div className="flex gap-4">
+                <div className="flex flex-col w-1/2 mt-6">
+                  <label
+                    htmlFor="title"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="Type product name"
+                    required
+                  />
+                </div>
 
-            <div className="w-full">
-              <label
-                htmlFor="price"
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-              >
-                Price
-              </label>
-              <input
-                type="number"
-                name="price"
-                id="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                placeholder="$2999"
-                required
-              />
+                <div className="flex flex-col w-1/2 mt-6">
+                  <label
+                    htmlFor="price"
+                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Price
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    id="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    placeholder="$2999"
+                    required
+                  />
+                </div>
+              </div>
             </div>
             <div>
               <label
