@@ -3,6 +3,9 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import pool from "../configs/db";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const testRoute = (req: Request, res: Response) => {
   try {
@@ -15,13 +18,9 @@ export const testRoute = (req: Request, res: Response) => {
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await pool.query("SELECT * FROM product");
+    const products = await prisma.product.findMany({});
 
-    if (products.rowCount === 0) {
-      return res.status(404).json({ message: "No products found" });
-    }
-
-    res.status(200).json(products.rows);
+    res.status(200).json(products);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -29,18 +28,13 @@ export const getAllProducts = async (req: Request, res: Response) => {
 };
 
 export const getSingleProduct = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
   try {
-    const product = await pool.query("SELECT * FROM product WHERE id = $1", [
-      id,
-    ]);
-
-    if (product.rows.length === 0) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-
-    res.status(200).json(product.rows[0]);
+    const product = await prisma.product.findFirst({
+      where: {
+        id: parseInt(req.params.id),
+      },
+    });
+    res.status(200).json(product);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -49,19 +43,18 @@ export const getSingleProduct = async (req: Request, res: Response) => {
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    // File upload handling
     const storage = multer.diskStorage({
-      destination: function (_req, _file, cb) {
+      destination: (_req, _file, cb) => {
         cb(null, "public/images");
       },
-      filename: function (_req, file, cb) {
+      filename: (_req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
       },
     });
 
     const upload = multer({ storage }).single("image");
 
-    upload(req, res, async function (err: any) {
+    upload(req, res, async (err: any) => {
       if (err instanceof multer.MulterError) {
         return res
           .status(400)
@@ -69,7 +62,12 @@ export const createProduct = async (req: Request, res: Response) => {
       } else if (err) {
         return res.status(400).json({ error: "File upload error" });
       }
-      const imgUrl = req.file?.filename;
+
+      let imgUrl: string | null = null;
+
+      if (req.file) {
+        imgUrl = req.file.filename;
+      }
 
       const { title, description, categories, quantity, price } = req.body;
 
@@ -79,20 +77,18 @@ export const createProduct = async (req: Request, res: Response) => {
           .json({ error: "Please provide all the required fields" });
       }
 
-      const insertQuery =
-        "INSERT INTO product (title, description, categories, quantity, price, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
-      const values = [title, description, categories, quantity, price, imgUrl];
-
-      // Execute the database query
-      pool.query(insertQuery, values, (err, result) => {
-        if (err) {
-          console.error("Error inserting product:", err);
-          return res.status(500).json({ error: "Failed to create product" });
-        }
-
-        const createdProduct = result.rows[0];
-        res.status(200).json(createdProduct);
+      const createProduct = await prisma.product.create({
+        data: {
+          title,
+          description,
+          categories,
+          price: parseFloat(price), // Convert price to float if needed
+          quantity: parseFloat(quantity), // Convert quantity to float if needed
+          image: imgUrl || "",
+        },
       });
+
+      res.status(200).json(createProduct);
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
