@@ -1,18 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Image from "next/image";
 import Link from "next/link";
 import Card from "@/components/Card";
 
 interface Product {
   id: number;
-  image: string;
   title: string;
   description: string;
   categories: string;
   price: number;
   quantity: number;
+  image: File | null | string;
 }
 
 const ListProducts = () => {

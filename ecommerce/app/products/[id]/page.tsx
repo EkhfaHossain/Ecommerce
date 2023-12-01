@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Card from "@/components/Card";
 import Link from "next/link";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface Product {
   image: string;
@@ -16,6 +16,8 @@ interface Product {
 }
 
 const SingleProduct = ({ params }: { params: { id: number } }) => {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
 
   useEffect(() => {
@@ -38,12 +40,20 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
 
   const handleDelete = async () => {
     try {
+      setIsDeleting(true);
       if (product && product.id) {
         const deleteProduct = await axios.delete(
           `http://localhost:9090/product/delete/${product.id}`
         );
         console.log("Product deleted successfully");
-        setProduct(deleteProduct.data);
+
+        setProduct(null);
+
+        setIsDeleting(false);
+
+        setTimeout(() => {
+          router.push(`/products/`); // Redirect to single product page
+        }, 1000);
       }
     } catch (error) {
       console.log("Error Deleting Product", error);
@@ -61,7 +71,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                   <div className="bg-sky-300">
                     <img
                       className="object-fill h-48 w-96"
-                      src={product.image ? product.image : "/no-image.jpeg"}
+                      src={"http://localhost:9090/images/" + product.image}
                     />
                   </div>
 
@@ -85,15 +95,16 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                     <button
                       className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
                       onClick={handleDelete}
+                      disabled={isDeleting}
                     >
-                      Delete
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </div>
               </Link>
             </Card>
           ) : (
-            <p>Loading...</p>
+            <p> Loading...</p>
           )}
         </div>
       </div>
