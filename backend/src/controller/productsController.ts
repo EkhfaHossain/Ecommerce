@@ -97,15 +97,17 @@ export const createProduct = async (req: Request, res: Response) => {
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
   try {
-    const getImage = await pool.query(
-      "SELECT image FROM product WHERE id = $1",
-      [id]
-    );
-    const product = getImage.rows[0];
-    const oldImgUrl = product.image;
+    const productImage = await prisma.product.findUnique({
+      where: {
+        id: parseInt(req.params.id),
+      },
+      select: {
+        image: true,
+      },
+    });
+
+    let oldImgUrl = productImage?.image || "";
     console.log("Old Image", oldImgUrl);
 
     const storage = multer.diskStorage({
@@ -128,14 +130,8 @@ export const updateProduct = async (req: Request, res: Response) => {
         return res.status(400).json({ error: "File upload error" });
       }
 
-      let newImgUrl = req.file?.filename;
-
-      // Triggers when there is no new image upload
-      if (!newImgUrl) {
-        newImgUrl = oldImgUrl;
-      }
-      // Triggers when a new Image is uploaded & Deleting the previous Image
-      else {
+      let newImgUrl = req.file?.filename || oldImgUrl;
+      if (req.file) {
         const imagePath = path.join(
           __dirname,
           "../../public/images",
@@ -161,16 +157,22 @@ export const updateProduct = async (req: Request, res: Response) => {
       console.log("New Image: ", newImgUrl);
 
       const { title, description, categories, quantity, price } = req.body;
-      const updateProduct = await pool.query(
-        "UPDATE product SET title = $1, description = $2, categories = $3, quantity = $4, price = $5, image = $6 WHERE id = $7 RETURNING *",
-        [title, description, categories, quantity, price, newImgUrl, id]
-      );
 
-      if (updateProduct.rowCount === 0) {
-        return res.status(404).json({ error: "Product doesn't exist" });
-      }
+      const updatedProduct = await prisma.product.update({
+        where: {
+          id: parseInt(req.params.id),
+        },
+        data: {
+          title,
+          price: parseFloat(price),
+          description,
+          categories,
+          quantity: parseFloat(quantity),
+          image: newImgUrl,
+        },
+      });
 
-      res.status(200).json(updateProduct.rows[0]);
+      res.status(200).json(updatedProduct);
     });
   } catch (error) {
     console.log(error);
@@ -179,20 +181,16 @@ export const updateProduct = async (req: Request, res: Response) => {
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
-  const { id } = req.params;
-
   try {
-    const getImage = await pool.query(
-      "SELECT image FROM product WHERE id = $1",
-      [id]
-    );
-    const product = getImage.rows[0];
-
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-
-    const imgUrl = product.image;
+    const productImage = await prisma.product.findUnique({
+      where: {
+        id: parseInt(req.params.id),
+      },
+      select: {
+        image: true,
+      },
+    });
+    const imgUrl = productImage?.image || "";
     console.log(imgUrl);
     const imagePath = path.join(__dirname, "../../public/images", imgUrl);
     console.log(imagePath);
@@ -209,14 +207,9 @@ export const deleteProduct = async (req: Request, res: Response) => {
       console.error("File not found:", imagePath);
     }
 
-    const deleteProduct = await pool.query(
-      "DELETE FROM product WHERE id = $1",
-      [id]
-    );
-
-    if (deleteProduct.rowCount === 0) {
-      return res.status(404).json({ error: "Product doesn't exist" });
-    }
+    const deleteProduct = await prisma.product.delete({
+      where: { id: parseInt(req.params.id) },
+    });
 
     res.status(200).json("Deleted Sucessfully!");
   } catch (error) {
