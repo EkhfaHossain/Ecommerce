@@ -70,7 +70,7 @@ const Update = ({ params }: { params: { id: number } }) => {
       console.log("Product updated:", response.data);
       setTimeout(() => {
         router.push(`/products/${params.id}`); // Redirect to single product page
-      }, 2000);
+      }, 1000);
     } catch (error) {
       console.error("An error occurred while updating:", error);
     } finally {

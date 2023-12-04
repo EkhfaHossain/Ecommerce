@@ -2,7 +2,6 @@ import { type Request, type Response } from "express";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
-import pool from "../configs/db";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
