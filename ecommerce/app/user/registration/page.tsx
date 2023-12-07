@@ -1,10 +1,70 @@
 "use client";
-import React from "react";
+import React, { useState, ChangeEvent, useRef } from "react";
 import Link from "next/link";
+import axios from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
+
+interface User {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const register: React.FC = () => {
+  const router = useRouter();
+  const [formData, setFormData] = useState<User>({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [registrationSuccess, setRegistrationSuccess] =
+    useState<boolean>(false);
+
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    console.log("Input Changed - Name:", name, "Value:", value);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("FormData: ", formData);
+    try {
+      const response = await axios.post(
+        "http://localhost:9090/registration",
+        formData
+      );
+      if (response.status === 200 || response.status === 201) {
+        console.log("Registration successful!");
+
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+        setRegistrationSuccess(true);
+        router.push("/user/registration/login");
+      } else {
+        console.error("Registration failed");
+        setRegistrationSuccess(false);
+      }
+    } catch (error) {
+      console.log("Error", error);
+      setRegistrationSuccess(false);
+    }
+  };
+
   const handleGoogleLoginSuccess = (credentialResponse: any) => {
     var decoded = jwtDecode(credentialResponse.credential);
     console.log(decoded);
@@ -21,7 +81,7 @@ const register: React.FC = () => {
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white text-center">
               Create Account
             </h1>
-            <form className="space-y-6 md:space-y-6">
+            <form className="space-y-6 md:space-y-6" onSubmit={handleSubmit}>
               <GoogleOAuthProvider clientId="679964972003-j48n55fotsid9ld6v8nvto3g9ihnqa0e.apps.googleusercontent.com">
                 <GoogleLogin
                   onSuccess={handleGoogleLoginSuccess}
@@ -45,6 +105,8 @@ const register: React.FC = () => {
                   type="name"
                   name="name"
                   id="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="Your Name"
                   required
@@ -62,6 +124,8 @@ const register: React.FC = () => {
                   type="email"
                   name="email"
                   id="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="name@company.com"
                   required
@@ -78,6 +142,8 @@ const register: React.FC = () => {
                   type="password"
                   name="password"
                   id="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
                   placeholder="••••••••"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   required
@@ -85,27 +151,32 @@ const register: React.FC = () => {
               </div>
               <div>
                 <label
-                  htmlFor="confirm-password"
+                  htmlFor="confirmPassword"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Confirm password
                 </label>
                 <input
-                  type="confirm-password"
-                  name="confirm-password"
-                  id="confirm-password"
+                  type="password"
+                  name="confirmPassword"
+                  id="confirmPassword"
                   placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   required
                 />
               </div>
+              <div>
+                <button
+                  disabled={registrationSuccess}
+                  type="submit"
+                  className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  Create an account
+                </button>
+              </div>
 
-              <button
-                type="submit"
-                className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-              >
-                Create an account
-              </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Already have an account?
                 <Link href="/user/registration/login" passHref>
