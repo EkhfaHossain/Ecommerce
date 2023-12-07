@@ -18,9 +18,11 @@ const Header = () => {
               </Link>
             </div>
             <div className="inline-block bg-white shadow-md hover:shadow-lg border border-borderColor rounded-md">
-              <button className="px-4 py-2 text-gray-700 font-semibold hover:bg-borderColor hover:border-borderColor">
-                Sign In
-              </button>
+              <Link href="/user/registration" passHref>
+                <button className="px-4 py-2 text-gray-700 font-semibold hover:bg-borderColor hover:border-borderColor">
+                  Sign In
+                </button>
+              </Link>
             </div>
           </div>
         </div>
