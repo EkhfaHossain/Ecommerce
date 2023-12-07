@@ -12,6 +12,6 @@ router.get("/", testRoute);
 
 // For user Registration
 router.post("/registration", userRegistration);
-router.get("/login", userLogin);
+router.post("/login", userLogin);
 
 export default router;

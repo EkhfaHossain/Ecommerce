@@ -1,16 +1,58 @@
-import React from "react";
+"use client";
+import React, { useState, ChangeEvent, useRef } from "react";
 import Link from "next/link";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-const login = () => {
+interface User {
+  email: string;
+  password: string;
+}
+
+const login: React.FC = () => {
+  const router = useRouter();
+  const [formData, setFormData] = useState<User>({
+    email: "",
+    password: "",
+  });
+
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    console.log("Input Changed - Name:", name, "Value:", value);
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:9090/login",
+        formData
+      );
+      if (response.status === 200 || response.status === 201) {
+        console.log("Login successful!");
+        router.push("/");
+      } else {
+        console.error("Login failed");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <section className="bg-gray-50 dark:bg-gray-900">
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+      <div className="flex flex-col items-center justify-center px-6 py-6 mx-auto md:h-screen lg:py-0">
         <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700 border border-borderColor">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white text-center">
               Sign In
             </h1>
-            <form className="space-y-4 md:space-y-6">
+            <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label
                   htmlFor="email"
@@ -22,6 +64,8 @@ const login = () => {
                   type="email"
                   name="email"
                   id="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="name@company.com"
                   required
@@ -38,6 +82,8 @@ const login = () => {
                   type="password"
                   name="password"
                   id="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
                   placeholder="••••••••"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   required
