@@ -38,7 +38,12 @@ const register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("FormData: ", formData);
+
+    if (formData.password !== formData.confirmPassword) {
+      console.log("Passwords do not match");
+      return;
+    }
+
     try {
       const response = await axios.post(
         "http://localhost:9090/registration",
