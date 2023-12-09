@@ -2,6 +2,8 @@
 import React, { useState, ChangeEvent, useRef } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -44,6 +46,25 @@ const login: React.FC = () => {
       console.log(error);
     }
   };
+
+  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+    var decodedGoogleUser = jwtDecode(credentialResponse.credential);
+    console.log(decodedGoogleUser);
+    try {
+      const response = await axios.post(
+        "http://localhost:9090/google-auth",
+        decodedGoogleUser
+      );
+      router.push("/");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleGoogleLoginError = () => {
+    console.log("Login failed");
+  };
+
   return (
     <section className="bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center px-6 py-6 mx-auto md:h-screen lg:py-0">
@@ -53,6 +74,18 @@ const login: React.FC = () => {
               Sign In
             </h1>
             <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+              <GoogleOAuthProvider clientId="679964972003-j48n55fotsid9ld6v8nvto3g9ihnqa0e.apps.googleusercontent.com">
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                  useOneTap
+                />
+              </GoogleOAuthProvider>
+              <div className="mt-4 grid grid-cols-3 items-center text-gray-400">
+                <hr className="border-gray-400" />
+                <p className="text-center text-sm">OR</p>
+                <hr className="border-gray-400" />
+              </div>
               <div>
                 <label
                   htmlFor="email"
@@ -109,7 +142,7 @@ const login: React.FC = () => {
                     </label>
                   </div>
                 </div>
-                <Link href="/user/registration" passHref>
+                <Link href="/user/registration/password/reset" passHref>
                   <span className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">
                     Forgotten password?
                   </span>

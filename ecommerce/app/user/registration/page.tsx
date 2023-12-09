@@ -70,9 +70,18 @@ const register: React.FC = () => {
     }
   };
 
-  const handleGoogleLoginSuccess = (credentialResponse: any) => {
-    var decoded = jwtDecode(credentialResponse.credential);
-    console.log(decoded);
+  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+    var decodedGoogleUser = jwtDecode(credentialResponse.credential);
+    console.log(decodedGoogleUser);
+    try {
+      const response = await axios.post(
+        "http://localhost:9090/google-auth",
+        decodedGoogleUser
+      );
+      router.push("/");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleGoogleLoginError = () => {
