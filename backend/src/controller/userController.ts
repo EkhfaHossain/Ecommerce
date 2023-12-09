@@ -23,9 +23,38 @@ export const userRegistration = async (req: Request, res: Response) => {
         name,
         email,
         password: hashedPassword,
+        isManual: true,
       },
     });
     res.status(200).json(user);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const googleUserRegistration = async (req: Request, res: Response) => {
+  try {
+    const { email, name, aud } = req.body;
+    const googleAuthUser = await prisma.user.upsert({
+      where: {
+        email: email,
+      },
+      update: {
+        name: name,
+        token: aud,
+        isManual: false,
+        password: aud,
+      },
+      create: {
+        email: email,
+        name: name,
+        token: aud,
+        isManual: false,
+        password: aud,
+      },
+    });
+    res.status(200).json(googleAuthUser);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -57,5 +86,13 @@ export const userLogin = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const userPasswordReset = async (req: Request, res: Response) => {
+  try {
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server Error" });
   }
 };
