@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { type Request, type Response } from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,7 @@ export const userRegistration = async (req: Request, res: Response) => {
         isManual: true,
       },
     });
+
     res.status(200).json(user);
   } catch (error) {
     console.log(error);
@@ -54,6 +56,7 @@ export const googleUserRegistration = async (req: Request, res: Response) => {
         password: aud,
       },
     });
+
     res.status(200).json(googleAuthUser);
   } catch (error) {
     console.log(error);
@@ -71,12 +74,18 @@ export const userLogin = async (req: Request, res: Response) => {
 
     if (userData !== null) {
       if (await bcrypt.compare(password, userData.password)) {
-        let user = {
-          user_id: userData.id,
-          user_name: userData.name,
-          user_email: userData.email,
-        };
-        res.status(200).send(user);
+        const token = jwt.sign({ userId: userData.id }, "ekh12", {
+          expiresIn: "1h",
+        });
+
+        res.cookie("token", token, {
+          httpOnly: true,
+        });
+
+        res.status(200).json({
+          message: "Login Successful!",
+          token,
+        });
       } else {
         res.status(401).send({ msg: "Invalid credentials" });
       }
@@ -86,6 +95,14 @@ export const userLogin = async (req: Request, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const userLogOut = async (req: Request, res: Response) => {
+  try {
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server Error" });
   }
 };
 
