@@ -1,33 +1,56 @@
 import React from "react";
 import Link from "next/link";
+import LogoutButton from "./LogoutButton";
 
-const Header = () => {
+const Header: React.FC = () => {
   return (
-    <header className="bg-navColor py-5 shadow-lg">
-      <div className="container max-w-screen-xl mx-auto px-3">
-        <div className="flex flex-wrap items-center">
-          <Link href="/" passHref>
-            <div className="px-2 text-2xl font-mono text-white">Ecommerce</div>
-          </Link>
-          <div className="flex items-center space-x-4 ml-auto">
-            <div className="inline-block bg-white shadow-md hover:shadow-lg border border-borderColor rounded-md">
-              <Link href="/products/create" passHref>
-                <button className="px-4 py-2 text-gray-700 font-semibold hover:bg-borderColor hover:border-borderColor">
-                  Add Product
-                </button>
-              </Link>
-            </div>
-            <div className="inline-block bg-white shadow-md hover:shadow-lg border border-borderColor rounded-md">
-              <Link href="/user/registration" passHref>
-                <button className="px-4 py-2 text-gray-700 font-semibold hover:bg-borderColor hover:border-borderColor">
-                  Sign In
-                </button>
-              </Link>
-            </div>
+    <div className="navbar bg-base-300">
+      <div className="flex-1">
+        <Link href="/" passHref>
+          <div className="btn btn-ghost text-xl">Ecommerce</div>
+        </Link>
+      </div>
+      <div className="dropdown dropdown-end">
+        <div
+          tabIndex={0}
+          role="button"
+          className="btn btn-ghost btn-circle avatar"
+        >
+          <div className="w-10 rounded-full">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              data-name="Layer 1"
+              viewBox="0 0 29 29"
+              id="user"
+            >
+              <path d="M14.5 2A12.514 12.514 0 0 0 2 14.5 12.521 12.521 0 0 0 14.5 27a12.5 12.5 0 0 0 0-25Zm7.603 19.713a8.48 8.48 0 0 0-15.199.008A10.367 10.367 0 0 1 4 14.5a10.5 10.5 0 0 1 21 0 10.368 10.368 0 0 1-2.897 7.213ZM14.5 7a4.5 4.5 0 1 0 4.5 4.5A4.5 4.5 0 0 0 14.5 7Z"></path>
+            </svg>
           </div>
         </div>
+        <ul
+          tabIndex={0}
+          className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+        >
+          <li>
+            <Link href="/products/create" passHref>
+              <div className="justify-between">
+                Add Product
+                <span className="badge"> new </span>
+              </div>
+            </Link>
+          </li>
+          <li>
+            <Link href="/user/registration/login" passHref>
+              <div className="justify-between">Sign In</div>
+            </Link>
+          </li>
+
+          <li>
+            <LogoutButton />
+          </li>
+        </ul>
       </div>
-    </header>
+    </div>
   );
 };
 
