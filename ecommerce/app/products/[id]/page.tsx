@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Card from "@/components/Card";
 import Link from "next/link";
+import { parseCookies } from "nookies";
 import { useRouter } from "next/navigation";
 
 interface Product {
@@ -19,6 +20,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const fetchSingleProduct = async () => {
@@ -36,6 +38,8 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
     };
 
     fetchSingleProduct();
+    const token = parseCookies().token;
+    setIsLoggedIn(!!token);
   }, [params.id]);
 
   const handleDelete = async () => {
@@ -52,7 +56,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
         setIsDeleting(false);
 
         setTimeout(() => {
-          router.push(`/products/`); // Redirect to single product page
+          router.push(`/products/`);
         }, 1000);
       }
     } catch (error) {
@@ -87,18 +91,23 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                   </div>
 
                   <div className="flex justify-between">
-                    <Link href={`/products/update/${product.id}`} passHref>
-                      <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
-                        Update
+                    {isLoggedIn ? (
+                      <Link href={`/products/update/${product.id}`} passHref>
+                        <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
+                          Update
+                        </button>
+                      </Link>
+                    ) : null}
+
+                    {isLoggedIn ? (
+                      <button
+                        className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
                       </button>
-                    </Link>
-                    <button
-                      className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </button>
+                    ) : null}
                   </div>
                 </div>
               </Link>
