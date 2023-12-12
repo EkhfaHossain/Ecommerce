@@ -1,8 +1,29 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { parseCookies } from "nookies";
 import LogoutButton from "./LogoutButton";
 
 const Header: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkLoggedIn = () => {
+      const token = parseCookies().token; // Get specific cookie value
+      if (token) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkLoggedIn();
+
+    const interval = setInterval(checkLoggedIn, 1000);
+
+    return () => clearInterval(interval);
+  }, [parseCookies().token]);
+
   return (
     <div className="navbar bg-base-300">
       <div className="flex-1">
@@ -31,23 +52,27 @@ const Header: React.FC = () => {
           tabIndex={0}
           className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
         >
-          <li>
-            <Link href="/products/create" passHref>
-              <div className="justify-between">
-                Add Product
-                <span className="badge"> new </span>
-              </div>
-            </Link>
-          </li>
-          <li>
-            <Link href="/user/registration/login" passHref>
-              <div className="justify-between">Sign In</div>
-            </Link>
-          </li>
-
-          <li>
-            <LogoutButton />
-          </li>
+          {isLoggedIn ? (
+            <>
+              <li>
+                <Link href="/products/create" passHref>
+                  <div className="justify-between">
+                    Add Product
+                    <span className="badge"> new </span>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <LogoutButton />
+              </li>
+            </>
+          ) : (
+            <li>
+              <Link href="/user/registration/login" passHref>
+                <div className="justify-between">Sign In</div>
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </div>

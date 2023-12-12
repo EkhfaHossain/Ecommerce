@@ -2,6 +2,7 @@
 import React from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import Router from "next/router";
 
 const LogoutButton: React.FC = () => {
   const router = useRouter();
@@ -13,6 +14,7 @@ const LogoutButton: React.FC = () => {
       if (response.status === 200) {
         console.log("Logout successful");
         //router.push("/user/registration/login");
+        window.location.reload();
       } else {
         console.error("Logout failed");
       }
