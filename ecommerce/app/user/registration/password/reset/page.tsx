@@ -38,6 +38,16 @@ const passwordReset: React.FC = () => {
         console.log("Password do not Match!");
         return;
       }
+      const response = await axios.post(
+        "http://localhost:9090/password-reset",
+        formData
+      );
+      if (response.status === 200 || response.status === 201) {
+        console.log("Password Reset successfully!");
+        router.push("/");
+      } else {
+        console.error("Password Reset failed");
+      }
     } catch (error) {
       console.log(error);
     }
