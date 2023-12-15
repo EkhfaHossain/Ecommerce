@@ -18,6 +18,17 @@ export const testRoute = (req: Request, res: Response) => {
 export const userRegistration = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
+
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
@@ -30,7 +41,7 @@ export const userRegistration = async (req: Request, res: Response) => {
 
     res.status(200).json(user);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -79,43 +90,49 @@ export const userLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Please provide email and password" });
+    }
+
     const userData = await prisma.user.findFirst({
       where: { email: email },
     });
 
-    if (userData !== null) {
-      if (await bcrypt.compare(password, userData.password)) {
-        const token = jwt.sign({ userId: userData.id }, "ekh12", {
-          expiresIn: "1h",
-        });
+    if (!userData) {
+      return res.status(404).json({ msg: "User not found" });
+    }
 
-        res.cookie("token", token, {
-          httpOnly: true,
-        });
+    const passwordMatch = await bcrypt.compare(password, userData.password);
 
-        res.status(200).json({
-          message: "Login Successful!",
-          token,
-        });
-      } else {
-        res.status(401).send({ msg: "Invalid credentials" });
-      }
+    if (passwordMatch) {
+      const token = jwt.sign({ userId: userData.id }, "ekh12", {
+        expiresIn: "1h",
+      });
+
+      res.cookie("token", token, {
+        httpOnly: true,
+      });
+
+      return res.status(200).json({
+        message: "Login Successful!",
+        token,
+      });
     } else {
-      res.status(404).send({ msg: "User not found" });
+      return res.status(401).json({ msg: "Invalid credentials" });
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 export const userLogOut = async (req: Request, res: Response) => {
   try {
     res.clearCookie("token");
-    res.status(200).json({ message: "Logout Successful" });
+    return res.status(200).json({ message: "Logout Successful" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Internal server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
