@@ -5,6 +5,7 @@ import axios from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface User {
   name: string;
@@ -15,15 +16,14 @@ interface User {
 
 const register: React.FC = () => {
   const router = useRouter();
+  const [registrationSuccess, setRegistrationSuccess] =
+    useState<boolean>(false);
   const [formData, setFormData] = useState<User>({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-
-  const [registrationSuccess, setRegistrationSuccess] =
-    useState<boolean>(false);
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -59,14 +59,19 @@ const register: React.FC = () => {
           confirmPassword: "",
         });
         setRegistrationSuccess(true);
+        toast.success("Registration successful!");
         router.push("/user/registration/login");
       } else {
         console.error("Registration failed");
         setRegistrationSuccess(false);
+        toast.error("Registration failed. Please try again.");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error", error);
       setRegistrationSuccess(false);
+      if (error.response && error.response.status === 400) {
+        toast.error("Email already exists. Please use a different email.");
+      }
     }
   };
 

@@ -10,7 +10,7 @@ import {
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import GoogleButton from "@/components/GoogleButton";
+import toast from "react-hot-toast";
 
 interface User {
   email: string;
@@ -44,13 +44,16 @@ const login: React.FC = () => {
       );
       if (response.status === 200 || response.status === 201) {
         console.log("Login successful!");
+        toast.success("Login successful!");
         Cookies.set("token", response.data.token, { expires: 1 / 24 });
         router.push("/");
       } else {
         console.error("Login failed");
+        toast.error("Login failed");
       }
     } catch (error) {
       console.log(error);
+      toast.error("Login failed");
     }
   };
 
@@ -64,18 +67,22 @@ const login: React.FC = () => {
       );
       if (response.status === 200 || response.status === 201) {
         console.log("Google Login successful!");
+        toast.success("Google Login successful!");
 
         Cookies.set("token", response.data.token, { expires: 1 / 24 });
         router.push("/");
       } else {
         console.error("Google Login failed");
+        toast.success("Google Login Failed!");
       }
     } catch (error) {
       console.log(error);
+      toast.success("Google Login Failed!");
     }
   };
 
   const handleGoogleLoginError = () => {
+    toast.error("Google Login failed");
     console.log("Login failed");
   };
 
