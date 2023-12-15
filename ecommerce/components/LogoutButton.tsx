@@ -3,6 +3,7 @@ import React from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Router from "next/router";
+import toast from "react-hot-toast";
 
 const LogoutButton: React.FC = () => {
   const router = useRouter();
@@ -13,13 +14,16 @@ const LogoutButton: React.FC = () => {
       });
       if (response.status === 200) {
         console.log("Logout successful");
+        toast.success("Logout Sucessful!");
         //router.push("/user/registration/login");
         window.location.reload();
       } else {
         console.error("Logout failed");
+        toast.error("Logout failed!");
       }
     } catch (error) {
       console.error("Error during logout:", error);
+      toast.error("Logout failed!");
     }
   };
 

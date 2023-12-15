@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { parseCookies } from "nookies";
 import LogoutButton from "./LogoutButton";
+import toast from "react-hot-toast";
 
 const Header: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const checkLoggedIn = () => {
-      const token = parseCookies().token; // Get specific cookie value
+      const token = parseCookies().token;
       if (token) {
         setIsLoggedIn(true);
       } else {
