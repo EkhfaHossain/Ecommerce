@@ -6,6 +6,7 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import Cookies from "js-cookie";
 
 interface User {
   name: string;
@@ -83,13 +84,24 @@ const register: React.FC = () => {
         "http://localhost:9090/google-auth",
         decodedGoogleUser
       );
-      router.push("/");
+      if (response.status === 200 || response.status === 201) {
+        console.log("Google Login successful!");
+        toast.success("Google Login successful!");
+
+        Cookies.set("token", response.data.token, { expires: 1 / 24 });
+        router.push("/");
+      } else {
+        console.error("Google Login failed");
+        toast.success("Google Login Failed!");
+      }
     } catch (error) {
       console.log(error);
+      toast.success("Google Login Failed!");
     }
   };
 
   const handleGoogleLoginError = () => {
+    toast.error("Google Login failed");
     console.log("Login failed");
   };
   return (
