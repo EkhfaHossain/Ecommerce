@@ -11,7 +11,6 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import GoogleButton from "@/components/GoogleButton";
-import { parseCookies } from "nookies";
 
 interface User {
   email: string;
