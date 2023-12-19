@@ -64,6 +64,11 @@ const Header: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/userprofile" passHref>
+                  <div className="justify-between">About</div>
+                </Link>
+              </li>
+              <li>
                 <LogoutButton />
               </li>
             </>

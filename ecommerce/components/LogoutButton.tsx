@@ -15,8 +15,8 @@ const LogoutButton: React.FC = () => {
       if (response.status === 200) {
         console.log("Logout successful");
         toast.success("Logout Sucessful!");
-        //router.push("/user/registration/login");
-        window.location.reload();
+        router.push("/");
+        //window.location.reload();
       } else {
         console.error("Logout failed");
         toast.error("Logout failed!");
