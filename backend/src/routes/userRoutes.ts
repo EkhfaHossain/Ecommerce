@@ -6,6 +6,7 @@ import {
   userRegistration,
   userPasswordReset,
   userLogOut,
+  userProfile,
 } from "../controller/userController";
 
 const router: Router = express.Router();
@@ -19,5 +20,6 @@ router.post("/login", userLogin);
 router.post("/google-auth", googleUserRegistration);
 router.post("/password-reset", userPasswordReset);
 router.post("/logout", userLogOut);
+router.get("/user-profile", userProfile);
 
 export default router;
