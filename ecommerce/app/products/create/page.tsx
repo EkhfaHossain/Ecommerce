@@ -45,8 +45,11 @@ const Form: React.FC = () => {
       }
 
       const response = await axios.post(
-        "http://localhost:9090/product/create",
-        formDataToSend
+        `http://localhost:9090/product/create`,
+        formDataToSend,
+        {
+          withCredentials: true,
+        }
       );
       console.log("Product submitted:", response.data);
       setFormData({

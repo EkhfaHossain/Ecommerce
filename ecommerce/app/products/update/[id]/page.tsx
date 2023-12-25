@@ -64,7 +64,10 @@ const Update = ({ params }: { params: { id: number } }) => {
 
       const response = await axios.put(
         `http://localhost:9090/product/update/${params.id}`,
-        formDataToSend
+        formDataToSend,
+        {
+          withCredentials: true,
+        }
       );
 
       console.log("Product updated:", response.data);

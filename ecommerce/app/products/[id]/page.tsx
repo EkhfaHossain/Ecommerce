@@ -27,7 +27,10 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       try {
         if (params.id) {
           const response = await axios.get(
-            `http://localhost:9090/products/${params.id}`
+            `http://localhost:9090/products/${params.id}`,
+            {
+              withCredentials: true,
+            }
           );
           setProduct(response.data);
           console.log(response.data);
@@ -47,7 +50,10 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       setIsDeleting(true);
       if (product && product.id) {
         const deleteProduct = await axios.delete(
-          `http://localhost:9090/product/delete/${product.id}`
+          `http://localhost:9090/product/delete/${product.id}`,
+          {
+            withCredentials: true,
+          }
         );
         console.log("Product deleted successfully");
 
