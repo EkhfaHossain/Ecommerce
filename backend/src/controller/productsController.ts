@@ -54,40 +54,45 @@ export const createProduct = async (req: Request, res: Response) => {
     const upload = multer({ storage }).single("image");
 
     upload(req, res, async (err: any) => {
-      if (err instanceof multer.MulterError) {
-        return res
-          .status(400)
-          .json({ error: "File upload error: " + err.message });
-      } else if (err) {
-        return res.status(400).json({ error: "File upload error" });
+      try {
+        if (err instanceof multer.MulterError) {
+          return res
+            .status(400)
+            .json({ error: "File upload error: " + err.message });
+        } else if (err) {
+          return res.status(400).json({ error: "File upload error" });
+        }
+
+        let imgUrl: string | null = null;
+
+        if (req.file) {
+          imgUrl = req.file.filename;
+        }
+
+        const { title, description, categories, quantity, price } = req.body;
+
+        if (!title || !description || !categories || !quantity || !price) {
+          return res
+            .status(400)
+            .json({ error: "Please provide all the required fields" });
+        }
+
+        const createProduct = await prisma.product.create({
+          data: {
+            title,
+            description,
+            categories,
+            price: parseFloat(price), // Convert price to float if needed
+            quantity: parseFloat(quantity), // Convert quantity to float if needed
+            image: imgUrl || "",
+          },
+        });
+
+        res.status(200).json(createProduct);
+      } catch (error) {
+        console.error("Internal Server Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
       }
-
-      let imgUrl: string | null = null;
-
-      if (req.file) {
-        imgUrl = req.file.filename;
-      }
-
-      const { title, description, categories, quantity, price } = req.body;
-
-      if (!title || !description || !categories || !quantity || !price) {
-        return res
-          .status(400)
-          .json({ error: "Please provide all the required fields" });
-      }
-
-      const createProduct = await prisma.product.create({
-        data: {
-          title,
-          description,
-          categories,
-          price: parseFloat(price), // Convert price to float if needed
-          quantity: parseFloat(quantity), // Convert quantity to float if needed
-          image: imgUrl || "",
-        },
-      });
-
-      res.status(200).json(createProduct);
     });
   } catch (error) {
     console.error("Internal Server Error:", error);
