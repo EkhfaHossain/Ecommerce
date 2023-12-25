@@ -2,10 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { type Request, type Response } from "express";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import cookieParser from "cookie-parser";
 
 const prisma = new PrismaClient();
-const parseCookies = cookieParser();
 
 export const testRoute = (req: Request, res: Response) => {
   try {
@@ -78,6 +76,7 @@ export const googleUserRegistration = async (req: Request, res: Response) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
+      sameSite: "strict",
     });
 
     res.status(200).json({
@@ -116,6 +115,7 @@ export const userLogin = async (req: Request, res: Response) => {
       res.cookie("token", token, {
         httpOnly: true,
         secure: true,
+        sameSite: "strict",
       });
 
       return res.status(200).json({
@@ -173,38 +173,37 @@ export const userPasswordReset = async (req: Request, res: Response) => {
 
 export const userProfile = async (req: Request, res: Response) => {
   try {
-    parseCookies(req, res, async () => {
-      const token = req.cookies.token;
-      console.log(token);
+    const token = req.cookies.token;
+    //console.log("User Profile Token:", token);
 
-      if (!token) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-      const decodedToken: any = jwt.verify(token, "ekh12") as JwtPayload;
+    const decodedToken: any = jwt.verify(token, "ekh12") as JwtPayload;
 
-      if (!decodedToken.userId) {
-        return res.status(401).json({ error: "Invalid token" });
-      }
+    if (!decodedToken.userId) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
 
-      const userId = decodedToken.userId;
+    const userId = decodedToken.userId;
 
-      const userProfile = await prisma.user.findUnique({
-        where: {
-          id: userId,
-        },
-        select: {
-          name: true,
-          email: true,
-        },
-      });
-
-      if (!userProfile) {
-        return res.status(404).json({ error: "User profile not found" });
-      }
-
-      res.status(200).json(userProfile);
+    const userProfile = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        name: true,
+        email: true,
+        role: true,
+      },
     });
+
+    if (!userProfile) {
+      return res.status(404).json({ error: "User profile not found" });
+    }
+
+    res.status(200).json(userProfile);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal server Error" });

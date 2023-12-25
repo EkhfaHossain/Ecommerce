@@ -8,11 +8,9 @@ import {
   userLogOut,
   userProfile,
 } from "../controller/userController";
+import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
 
 const router: Router = express.Router();
-
-// Test Route
-router.get("/", testRoute);
 
 // For user Registration
 router.post("/registration", userRegistration);

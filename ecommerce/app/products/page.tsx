@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import Card from "@/components/Card";
+import CategoryFilter from "@/components/CategoryFilter";
 
 interface Product {
   id: number;
@@ -33,6 +34,7 @@ const ListProducts = () => {
 
   return (
     <section className="py-12">
+      {/* <CategoryFilter /> */}
       <div className="max-w-screen-xl container mx-auto px-4">
         <div className="md:flex-row -mx-4 flex flex-wrap">
           {products.map((product) => (
