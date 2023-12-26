@@ -64,11 +64,11 @@ const ListProducts = () => {
                       ${product.price}
                     </p>
                   </div>
-                  <div className="self-end">
+                  {/* <div className="self-end">
                     <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
                       Buy Now
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </Link>
             </Card>
