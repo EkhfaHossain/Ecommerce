@@ -21,29 +21,53 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const fetchSingleProduct = async () => {
+    const fetchData = async () => {
       try {
         if (params.id) {
           const response = await axios.get(
             `http://localhost:9090/products/${params.id}`,
-            {
-              withCredentials: true,
-            }
+            { withCredentials: true }
           );
           setProduct(response.data);
           console.log(response.data);
         }
+
+        await fetchUserData();
       } catch (error) {
-        console.error("Error fetching product:", error);
+        console.error("Error fetching product or user data:", error);
       }
     };
 
-    fetchSingleProduct();
-    const token = parseCookies().token;
-    setIsLoggedIn(!!token);
+    fetchData();
   }, [params.id]);
+
+  const fetchUserData = async () => {
+    try {
+      const token = parseCookies().token;
+      setIsLoggedIn(!!token);
+
+      if (!token) {
+        return;
+      }
+
+      const userProfileResponse = await axios.get(
+        `http://localhost:9090/user-profile`,
+        { withCredentials: true }
+      );
+
+      const userRole = userProfileResponse.data?.role;
+      console.log(userRole);
+
+      if (userRole === "admin") {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -67,6 +91,33 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       }
     } catch (error) {
       console.log("Error Deleting Product", error);
+    }
+  };
+
+  const handleBuy = async () => {
+    try {
+      const userProfileResponse = await axios.get(
+        `http://localhost:9090/user-profile`,
+        { withCredentials: true }
+      );
+
+      const userId = userProfileResponse.data?.id;
+      console.log(userId);
+
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+
+      const buyProduct = await axios.post(
+        `http://localhost:9090/product/buy/${params.id}`,
+        { userId },
+        { withCredentials: true }
+      );
+
+      console.log("Product purchased successfully");
+    } catch (error) {
+      console.error("Error purchasing product:", error);
     }
   };
 
@@ -97,29 +148,40 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                   </div>
 
                   <div className="flex justify-between">
-                    {isLoggedIn ? (
-                      <Link href={`/products/update/${product.id}`} passHref>
-                        <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
-                          Update
-                        </button>
-                      </Link>
-                    ) : null}
+                    {isLoggedIn && isAdmin && (
+                      <>
+                        <Link href={`/products/update/${product.id}`} passHref>
+                          <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
+                            Update
+                          </button>
+                        </Link>
 
-                    {isLoggedIn ? (
-                      <button
-                        className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                      >
-                        {isDeleting ? "Deleting..." : "Delete"}
-                      </button>
-                    ) : null}
+                        <button
+                          className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </button>
+                      </>
+                    )}
+
+                    {isLoggedIn && !isAdmin && (
+                      <div className="self-end">
+                        <button
+                          className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
+                          onClick={handleBuy}
+                        >
+                          Buy Now
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Link>
             </Card>
           ) : (
-            <p> Loading...</p>
+            <p>Loading...</p>
           )}
         </div>
       </div>
