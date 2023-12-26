@@ -224,10 +224,11 @@ export const deleteProduct = async (req: Request, res: Response) => {
 
 export const buyProduct = async (req: Request, res: Response) => {
   try {
-    const { userId, productId } = req.body;
+    const productId = parseInt(req.params.id);
+    const { userId } = req.body;
     const product = await prisma.product.findUnique({
       where: {
-        id: productId,
+        id: parseInt(req.params.id),
       },
     });
 

@@ -3,7 +3,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import productRoutes from "./routes/productRoutes";
 import userRoutes from "./routes/userRoutes";
-import { authenticateAndAuthorizeMiddleware } from "./middleware/authMiddleWare";
 
 const app = express();
 app.use(cookieParser());

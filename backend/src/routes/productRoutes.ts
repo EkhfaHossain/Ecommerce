@@ -31,6 +31,6 @@ router.delete(
   authenticateAndAuthorizeMiddleware,
   deleteProduct
 );
-router.post("/product/buy", buyProduct);
+router.post("/product/buy/:id", buyProduct);
 
 export default router;
