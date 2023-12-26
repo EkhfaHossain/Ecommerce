@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 export const testRoute = (req: Request, res: Response) => {
   try {
-    res.send({ msg: "hello" });
+    res.send({ msg: "hello Product" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -216,6 +216,46 @@ export const deleteProduct = async (req: Request, res: Response) => {
     });
 
     res.status(200).json("Deleted Sucessfully!");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const buyProduct = async (req: Request, res: Response) => {
+  try {
+    const { userId, productId } = req.body;
+    const product = await prisma.product.findUnique({
+      where: {
+        id: productId,
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    if (product.quantity <= 0) {
+      return res.status(400).json({ error: "Product is out of stock" });
+    }
+
+    const transaction = await prisma.userProduct.create({
+      data: {
+        userId,
+        productId,
+      },
+    });
+    const updatedProduct = await prisma.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        quantity: {
+          decrement: 1,
+        },
+      },
+    });
+    res.status(200).json({ msg: "Successful!" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });

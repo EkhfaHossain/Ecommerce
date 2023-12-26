@@ -6,12 +6,14 @@ import {
   updateProduct,
   deleteProduct,
   testRoute,
+  buyProduct,
 } from "../controller/productsController";
 
 import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
 
 const router: Router = express.Router();
 
+router.get("/test-product", testRoute);
 router.get("/products", getAllProducts);
 router.get("/products/:id", getSingleProduct);
 router.post(
@@ -29,5 +31,6 @@ router.delete(
   authenticateAndAuthorizeMiddleware,
   deleteProduct
 );
+router.post("/product/buy", buyProduct);
 
 export default router;
