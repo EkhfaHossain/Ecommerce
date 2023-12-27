@@ -17,9 +17,25 @@ export const testRoute = (req: Request, res: Response) => {
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({});
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 6;
 
-    res.status(200).json(products);
+    const skip = (page - 1) * limit;
+
+    const totalProducts = await prisma.product.count();
+
+    const products = await prisma.product.findMany({
+      take: limit,
+      skip: skip,
+    });
+
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.status(200).json({
+      products: products,
+      totalPages: totalPages,
+      currentPage: page,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
