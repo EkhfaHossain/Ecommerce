@@ -4,6 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import Card from "@/components/Card";
 import CategoryFilter from "@/components/CategoryFilter";
+import Pagination from "@/components/Pagination";
 
 interface Product {
   id: number;
@@ -17,20 +18,29 @@ interface Product {
 
 const ListProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProducts = async (page: any) => {
       try {
-        const response = await axios.get(`http://localhost:9090/products`);
-        setProducts(response.data);
-        console.log(response.data);
+        const response = await axios.get(
+          `http://localhost:9090/products?page=${page}`
+        );
+        setProducts(response.data.products);
+        setTotalPages(response.data.totalPages);
+        setCurrentPage(page);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
     };
 
-    fetchProducts();
-  }, []);
+    fetchProducts(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = (page: any) => {
+    setCurrentPage(page);
+  };
 
   return (
     <section className="py-12">
@@ -74,6 +84,13 @@ const ListProducts = () => {
             </Card>
           ))}
         </div>
+      </div>
+      <div className="flex justify-center items-center mb-10">
+        <Pagination
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+        />
       </div>
     </section>
   );
