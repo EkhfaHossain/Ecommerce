@@ -19,17 +19,52 @@ export const getAllProducts = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = 6;
-
     const skip = (page - 1) * limit;
+    let totalProducts;
+    let products;
 
-    const totalProducts = await prisma.product.count();
+    const minPrice = parseFloat(req.query.min as string) || 0;
+    const maxPrice = parseFloat(req.query.max as string) || Infinity;
+    // console.log("Page:", page);
+    // console.log("Limit:", limit);
+    // console.log("Skip:", skip);
+    // console.log("Min Price:", minPrice);
+    // console.log("Max Price:", maxPrice);
 
-    const products = await prisma.product.findMany({
-      take: limit,
-      skip: skip,
-    });
+    if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+      totalProducts = await prisma.product.count();
+      products = await prisma.product.findMany({
+        take: limit,
+        skip: skip,
+      });
+
+      // console.log("Products:", products);
+    } else {
+      totalProducts = await prisma.product.count({
+        where: {
+          price: {
+            gte: minPrice,
+            lte: maxPrice,
+          },
+        },
+      });
+
+      products = await prisma.product.findMany({
+        take: limit,
+        skip: skip,
+        where: {
+          price: {
+            gte: minPrice,
+            lte: maxPrice, // Use the actual variable `maxPrice` here
+          },
+        },
+      });
+
+      // console.log("Products:", products);
+    }
 
     const totalPages = Math.ceil(totalProducts / limit);
+    //console.log("Total Pages:", totalPages);
 
     res.status(200).json({
       products: products,
@@ -275,6 +310,45 @@ export const buyProduct = async (req: Request, res: Response) => {
     res.status(200).json({ msg: "Successful!" });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getAllPurchases = async (req: Request, res: Response) => {
+  try {
+    const productsBoughtbyUser = await prisma.userProduct.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        product: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+    const purchases = productsBoughtbyUser.map((products) => {
+      return {
+        customer: {
+          id: products.user.id,
+          name: products.user.name,
+          email: products.user.email,
+        },
+        product: {
+          id: products.product.id,
+          name: products.product.title,
+        },
+      };
+    });
+    res.status(200).json(purchases);
+  } catch (error) {
+    console.error("Error fetching purchases:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

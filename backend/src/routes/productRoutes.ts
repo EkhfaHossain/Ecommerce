@@ -7,6 +7,7 @@ import {
   deleteProduct,
   testRoute,
   buyProduct,
+  getAllPurchases,
 } from "../controller/productsController";
 
 import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
@@ -32,5 +33,10 @@ router.delete(
   deleteProduct
 );
 router.post("/product/buy/:id", buyProduct);
+router.get(
+  "/product/bought-by-user",
+
+  getAllPurchases
+);
 
 export default router;
