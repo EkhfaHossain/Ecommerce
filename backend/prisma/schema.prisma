@@ -15,6 +15,7 @@ model product {
   quantity    Float     @default(0)
   price       Float     @default(0)
   image       String
+  status      String?   @default("available")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   users       userProduct[]
