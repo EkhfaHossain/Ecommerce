@@ -72,9 +72,8 @@ const CheckoutPage: React.FC = () => {
         <div className="border-b border-gray-200">
           <div className="flex items-center justify-between px-4 py-3 bg-gray-100">
             <span className="font-bold">Product</span>
-            <span className="font-bold">Price</span>
             <span className="font-bold">Quantity</span>
-            <span className="font-bold">Status</span>
+            <span className="font-bold">Price</span>
           </div>
         </div>
         <div>
@@ -84,23 +83,8 @@ const CheckoutPage: React.FC = () => {
               className="flex items-center justify-between px-4 py-3"
             >
               <span>{product.name}</span>
+              <span> {product.quantity}</span>
               <span>${product.price}</span>
-              <div className="flex items-center">
-                <button
-                  onClick={() => decreaseQuantity(product.id)}
-                  className="text-sm bg-gray-200 py-1 px-2 rounded-l focus:outline-none"
-                >
-                  -
-                </button>
-                <span className="px-2">{product.quantity}</span>
-                <button
-                  onClick={() => increaseQuantity(product.id)}
-                  className="text-sm bg-gray-200 py-1 px-2 rounded-r focus:outline-none"
-                >
-                  +
-                </button>
-              </div>
-              <span>{product.status}</span>
             </div>
           ))}
         </div>
@@ -119,7 +103,7 @@ const CheckoutPage: React.FC = () => {
         </div>
         <div className="mt-6 flex justify-center">
           <button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none">
-            Proceed to Payment
+            Confirm Purchase
           </button>
         </div>
       </div>
