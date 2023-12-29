@@ -78,6 +78,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
+      toast.error("Error fetching user data");
     }
   };
 
@@ -92,6 +93,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
           }
         );
         console.log("Product deleted successfully");
+        toast.error("Product deleted successfully");
 
         setProduct(null);
 
@@ -103,6 +105,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       }
     } catch (error) {
       console.log("Error Deleting Product", error);
+      toast.error("Error deleting product. Please try again.");
     }
   };
 
@@ -130,8 +133,14 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       console.log("Product purchased successfully");
       toast.success("Product purchased successfully!");
       setSelectedQuantity(1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error purchasing product:", error);
+
+      if (error.response && error.response.status === 400) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error("Error purchasing product. Please try again.");
+      }
     }
   };
 
@@ -160,6 +169,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                     <p className="mt-2 text-lg">Price: ${product.price}</p>
                     <div className="flex items-center mt-4 justify-center">
                       <button
+                        type="button"
                         onClick={decreaseQuantity}
                         className="text-sm bg-gray-200 py-1 px-2 rounded-l focus:outline-none"
                       >
@@ -167,6 +177,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                       </button>
                       <span className="px-2">{selectedQuantity}</span>
                       <button
+                        type="button"
                         onClick={increaseQuantity}
                         className="text-sm bg-gray-200 py-1 px-2 rounded-r focus:outline-none"
                       >
