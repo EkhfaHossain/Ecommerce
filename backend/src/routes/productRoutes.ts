@@ -7,7 +7,7 @@ import {
   deleteProduct,
   testRoute,
   buyProduct,
-  getAllPurchasesbyAllUser,
+  getAllPurchasesByAllUsers,
   getUserPurchasedProducts,
 } from "../controller/productsController";
 
@@ -34,7 +34,7 @@ router.delete(
   deleteProduct
 );
 router.post("/product/buy/:id", buyProduct);
-router.get("/product/bought-by-user", getAllPurchasesbyAllUser);
+router.get("/product/bought-by-user", getAllPurchasesByAllUsers);
 router.get("/product/checkout", getUserPurchasedProducts);
 
 export default router;

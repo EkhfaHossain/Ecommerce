@@ -38,7 +38,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
       };
     }
 
-    console.log("Category:", category);
+    //console.log("Category:", category);
 
     where.categories = {
       equals: category,
@@ -313,9 +313,13 @@ export const buyProduct = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllPurchasesbyAllUser = async (req: Request, res: Response) => {
+// Backend endpoint to get all purchases with customer details and associated products
+export const getAllPurchasesByAllUsers = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const productsBoughtbyUser = await prisma.userProduct.findMany({
+    const productsBoughtByUsers = await prisma.userProduct.findMany({
       include: {
         user: {
           select: {
@@ -328,23 +332,38 @@ export const getAllPurchasesbyAllUser = async (req: Request, res: Response) => {
           select: {
             id: true,
             title: true,
+            status: true,
           },
         },
       },
     });
-    const purchases = productsBoughtbyUser.map((products) => {
-      return {
-        customer: {
-          id: products.user.id,
-          name: products.user.name,
-          email: products.user.email,
-        },
-        product: {
-          id: products.product.id,
-          name: products.product.title,
-        },
-      };
+
+    // Structure data to show purchases by all customers
+    const purchasesByCustomers: any = {};
+
+    productsBoughtByUsers.forEach((purchase) => {
+      const customerId = purchase.user.id;
+
+      if (!purchasesByCustomers[customerId]) {
+        purchasesByCustomers[customerId] = {
+          customer: {
+            id: purchase.user.id,
+            name: purchase.user.name,
+            email: purchase.user.email,
+          },
+          products: [],
+        };
+      }
+
+      purchasesByCustomers[customerId].products.push({
+        id: purchase.product.id,
+        title: purchase.product.title,
+        status: purchase.product.status,
+      });
     });
+
+    const purchases = Object.values(purchasesByCustomers);
+
     res.status(200).json(purchases);
   } catch (error) {
     console.error("Error fetching purchases:", error);
