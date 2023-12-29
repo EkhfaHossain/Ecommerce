@@ -165,16 +165,24 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                         </button>
                       </>
                     )}
+                  </div>
 
+                  <div className="flex justify-between">
                     {isLoggedIn && !isAdmin && (
-                      <div className="self-end">
+                      <>
                         <button
                           className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
                           onClick={handleBuy}
                         >
                           Buy Now
                         </button>
-                      </div>
+                        <button
+                          className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
+                          //onClick={handleBuy}
+                        >
+                          Add to Cart
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
