@@ -14,21 +14,23 @@ const CheckoutPage: React.FC = () => {
   const [cartProducts, setCartProducts] = useState<Product[]>([]);
 
   const increaseQuantity = (productId: number) => {
-    const updatedProducts = cartProducts.map((product) =>
-      product.id === productId
-        ? { ...product, quantity: product.quantity + 1 }
-        : product
+    setCartProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === productId
+          ? { ...product, quantity: product.quantity + 1 }
+          : product
+      )
     );
-    setCartProducts(updatedProducts);
   };
 
   const decreaseQuantity = (productId: number) => {
-    const updatedProducts = cartProducts.map((product) =>
-      product.id === productId && product.quantity > 1
-        ? { ...product, quantity: product.quantity - 1 }
-        : product
+    setCartProducts((prevProducts) =>
+      prevProducts.map((product) =>
+        product.id === productId && product.quantity > 1
+          ? { ...product, quantity: product.quantity - 1 }
+          : product
+      )
     );
-    setCartProducts(updatedProducts);
   };
 
   useEffect(() => {
@@ -40,7 +42,6 @@ const CheckoutPage: React.FC = () => {
         );
         console.log(response.data);
 
-        // Aggregate products by name and calculate total quantity
         const productsMap = new Map<string, Product>();
         response.data.products.forEach((product: Product) => {
           if (productsMap.has(product.name)) {
@@ -54,7 +55,6 @@ const CheckoutPage: React.FC = () => {
           }
         });
 
-        // Convert aggregated products back to an array
         const aggregatedProducts = Array.from(productsMap.values());
         setCartProducts(aggregatedProducts);
       } catch (error) {
@@ -106,7 +106,6 @@ const CheckoutPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Total */}
       <div className="mt-6">
         <div className="flex justify-between items-center">
           <span className="font-bold text-lg">Total:</span>
