@@ -4,26 +4,35 @@ import Link from "next/link";
 import { parseCookies } from "nookies";
 import LogoutButton from "./LogoutButton";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 const Header: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const checkLoggedInStatus = async () => {
+    try {
+      const response = await axios.get(`http://localhost:9090/user-profile`, {
+        withCredentials: true,
+      });
+      setUserRole(response.data.role);
+      setIsLoggedIn(true);
+      console.log(response.data.role);
+    } catch (error) {
+      console.error("Error fetching user role:", error);
+      setIsLoggedIn(false);
+    }
+  };
 
   useEffect(() => {
-    const checkLoggedIn = () => {
-      const token = parseCookies().token;
-      if (token) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-      }
-    };
+    checkLoggedInStatus();
 
-    checkLoggedIn();
-
-    const interval = setInterval(checkLoggedIn, 1000);
+    const interval = setInterval(() => {
+      checkLoggedInStatus();
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [parseCookies().token]);
+  }, []);
 
   return (
     <div className="navbar bg-base-300">
@@ -55,24 +64,37 @@ const Header: React.FC = () => {
         >
           {isLoggedIn ? (
             <>
-              <li>
-                <Link href="/products/create" passHref>
-                  <div className="justify-between">
-                    Add Product
-                    <span className="badge"> new </span>
-                  </div>
-                </Link>
-              </li>
-              <li>
-                <Link href="/userprofile" passHref>
-                  <div className="justify-between">About</div>
-                </Link>
-              </li>
+              {userRole === "admin" ? (
+                <>
+                  <li>
+                    <Link href="/products/create" passHref>
+                      <div className="justify-between">
+                        Add Product
+                        <span className="badge"> new </span>
+                      </div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/admin/order-dashboard" passHref>
+                      <div className="justify-between">Order Dashboard</div>
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link href="/userprofile" passHref>
+                      <div className="justify-between">About</div>
+                    </Link>
+                  </li>
+                </>
+              )}
               <li>
                 <LogoutButton />
               </li>
             </>
-          ) : (
+          ) : null}
+          {!isLoggedIn && (
             <li>
               <Link href="/user/registration/login" passHref>
                 <div className="justify-between">Sign In</div>
