@@ -12,7 +12,7 @@ model product {
   title       String 
   description String
   categories  String
-  quantity    Float     @default(0)
+  quantity    Int    @default(0)
   price       Float     @default(0)
   image       String
   status      String?   @default("available")
@@ -35,10 +35,11 @@ model user {
 }
 
 model userProduct {
-  id        Int      @id @default(autoincrement())
-  user      user     @relation(fields: [userId], references: [id])
-  userId    Int      // Foreign key to user's ID
-  product   product  @relation(fields: [productId], references: [id])
-  productId Int      // Foreign key to product's ID
+  id               Int      @id @default(autoincrement())
+  user             user     @relation(fields: [userId], references: [id])
+  userId           Int      // Foreign key to user's ID
+  product          product  @relation(fields: [productId], references: [id])
+  productId        Int      // Foreign key to product's ID
+  quantity         Int      @default(1)
 
 }
