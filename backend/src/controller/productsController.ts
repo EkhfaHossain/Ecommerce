@@ -20,51 +20,44 @@ export const getAllProducts = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = 6;
     const skip = (page - 1) * limit;
-    let totalProducts;
+
+    let totalProducts: number = 0;
     let products;
 
-    const minPrice = parseFloat(req.query.min as string) || 0;
-    const maxPrice = parseFloat(req.query.max as string) || Infinity;
-    // console.log("Page:", page);
-    // console.log("Limit:", limit);
-    // console.log("Skip:", skip);
-    // console.log("Min Price:", minPrice);
-    // console.log("Max Price:", maxPrice);
+    const minPrice = parseFloat(req.query.min as string);
+    const maxPrice = parseFloat(req.query.max as string);
+    const category = req.query.category as string;
+
+    const where: any = {};
 
     if (!isNaN(minPrice) && !isNaN(maxPrice)) {
-      totalProducts = await prisma.product.count();
-      products = await prisma.product.findMany({
-        take: limit,
-        skip: skip,
-      });
-
-      // console.log("Products:", products);
-    } else {
-      totalProducts = await prisma.product.count({
-        where: {
-          price: {
-            gte: minPrice,
-            lte: maxPrice,
-          },
-        },
-      });
-
-      products = await prisma.product.findMany({
-        take: limit,
-        skip: skip,
-        where: {
-          price: {
-            gte: minPrice,
-            lte: maxPrice, // Use the actual variable `maxPrice` here
-          },
-        },
-      });
-
-      // console.log("Products:", products);
+      where.price = {
+        gte: minPrice,
+        lte: maxPrice,
+      };
     }
 
+    console.log("Category:", category);
+
+    where.categories = {
+      equals: category,
+    };
+
+    totalProducts = await prisma.product.count({
+      where: {
+        categories: {
+          contains: category,
+        },
+      },
+    });
+
+    products = await prisma.product.findMany({
+      take: limit,
+      skip: skip,
+      where,
+    });
+
     const totalPages = Math.ceil(totalProducts / limit);
-    //console.log("Total Pages:", totalPages);
 
     res.status(200).json({
       products: products,
