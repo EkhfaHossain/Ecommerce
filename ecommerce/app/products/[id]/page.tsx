@@ -5,6 +5,7 @@ import Card from "@/components/Card";
 import Link from "next/link";
 import { parseCookies } from "nookies";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Product {
   image: string;
@@ -127,6 +128,8 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       );
 
       console.log("Product purchased successfully");
+      toast.success("Product purchased successfully!");
+      setSelectedQuantity(1);
     } catch (error) {
       console.error("Error purchasing product:", error);
     }
