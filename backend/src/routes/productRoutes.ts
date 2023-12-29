@@ -7,7 +7,8 @@ import {
   deleteProduct,
   testRoute,
   buyProduct,
-  getAllPurchases,
+  getAllPurchasesbyAllUser,
+  getUserPurchasedProducts,
 } from "../controller/productsController";
 
 import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
@@ -33,10 +34,7 @@ router.delete(
   deleteProduct
 );
 router.post("/product/buy/:id", buyProduct);
-router.get(
-  "/product/bought-by-user",
-
-  getAllPurchases
-);
+router.get("/product/bought-by-user", getAllPurchasesbyAllUser);
+router.get("/product/checkout", getUserPurchasedProducts);
 
 export default router;

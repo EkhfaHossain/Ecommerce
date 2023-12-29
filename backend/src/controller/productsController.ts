@@ -1,7 +1,8 @@
 import { type Request, type Response } from "express";
 import multer from "multer";
 import fs from "fs";
-import path from "path";
+import path, { parse } from "path";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -269,7 +270,11 @@ export const deleteProduct = async (req: Request, res: Response) => {
 export const buyProduct = async (req: Request, res: Response) => {
   try {
     const productId = parseInt(req.params.id);
-    const { userId } = req.body;
+    const { userId, quantity } = req.body;
+    //console.log("User Id:", userId);
+    //console.log("Quantity:", quantity);
+    const parsedQuantity = parseInt(quantity);
+    //console.log("Parsed Quantity:", parsedQuantity);
     const product = await prisma.product.findUnique({
       where: {
         id: parseInt(req.params.id),
@@ -280,7 +285,7 @@ export const buyProduct = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    if (product.quantity <= 0) {
+    if (product.quantity < parsedQuantity) {
       return res.status(400).json({ error: "Product is out of stock" });
     }
 
@@ -288,6 +293,7 @@ export const buyProduct = async (req: Request, res: Response) => {
       data: {
         userId,
         productId,
+        quantity: parsedQuantity,
       },
     });
     const updatedProduct = await prisma.product.update({
@@ -296,7 +302,7 @@ export const buyProduct = async (req: Request, res: Response) => {
       },
       data: {
         quantity: {
-          decrement: 1,
+          decrement: parsedQuantity,
         },
       },
     });
@@ -307,7 +313,7 @@ export const buyProduct = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllPurchases = async (req: Request, res: Response) => {
+export const getAllPurchasesbyAllUser = async (req: Request, res: Response) => {
   try {
     const productsBoughtbyUser = await prisma.userProduct.findMany({
       include: {
@@ -342,6 +348,42 @@ export const getAllPurchases = async (req: Request, res: Response) => {
     res.status(200).json(purchases);
   } catch (error) {
     console.error("Error fetching purchases:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getUserPurchasedProducts = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.token;
+    //console.log("User Profile Token:", token);
+
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const decodedToken: any = jwt.verify(token, "ekh12") as JwtPayload;
+
+    if (!decodedToken.userId) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const userId = decodedToken.userId;
+
+    const userPurchases = await prisma.userProduct.findMany({
+      where: { userId },
+      include: { product: true },
+    });
+
+    const products = userPurchases.map((userPurchase) => ({
+      name: userPurchase.product.title,
+      price: userPurchase.product.price,
+      quantity: userPurchase.quantity,
+      status: userPurchase.product.status,
+    }));
+
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error("Error fetching user purchases:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
