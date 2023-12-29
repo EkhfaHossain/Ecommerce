@@ -22,6 +22,17 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+
+  const increaseQuantity = () => {
+    setSelectedQuantity((prevQuantity) => prevQuantity + 1);
+  };
+
+  const decreaseQuantity = () => {
+    setSelectedQuantity((prevQuantity) =>
+      prevQuantity > 1 ? prevQuantity - 1 : 1
+    );
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,16 +113,16 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
       );
 
       const userId = userProfileResponse.data?.id;
-      console.log(userId);
+      //console.log(userId);
 
       if (!userId) {
         console.error("User ID not found");
         return;
       }
-
+      //console.log(selectedQuantity);
       const buyProduct = await axios.post(
         `http://localhost:9090/product/buy/${params.id}`,
-        { userId },
+        { userId, quantity: selectedQuantity },
         { withCredentials: true }
       );
 
@@ -142,9 +153,23 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                       Category: {product.categories}
                     </p>
                     <p className="mt-2 text-lg">{product.description}</p>
-                    <p className="mt-2 text-lg font-semibold">
-                      ${product.price}
-                    </p>
+
+                    <p className="mt-2 text-lg">Price: ${product.price}</p>
+                    <div className="flex items-center mt-4 justify-center">
+                      <button
+                        onClick={decreaseQuantity}
+                        className="text-sm bg-gray-200 py-1 px-2 rounded-l focus:outline-none"
+                      >
+                        -
+                      </button>
+                      <span className="px-2">{selectedQuantity}</span>
+                      <button
+                        onClick={increaseQuantity}
+                        className="text-sm bg-gray-200 py-1 px-2 rounded-r focus:outline-none"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex justify-between">
