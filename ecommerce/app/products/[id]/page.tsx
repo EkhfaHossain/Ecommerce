@@ -24,16 +24,7 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-
-  const increaseQuantity = () => {
-    setSelectedQuantity((prevQuantity) => prevQuantity + 1);
-  };
-
-  const decreaseQuantity = () => {
-    setSelectedQuantity((prevQuantity) =>
-      prevQuantity > 1 ? prevQuantity - 1 : 1
-    );
-  };
+  const [cart, setCart] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -144,6 +135,38 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
     }
   };
 
+  const increaseQuantity = () => {
+    setSelectedQuantity((prevQuantity) => prevQuantity + 1);
+  };
+
+  const decreaseQuantity = () => {
+    setSelectedQuantity((prevQuantity) =>
+      prevQuantity > 1 ? prevQuantity - 1 : 1
+    );
+  };
+
+  const handleAddToCart = () => {
+    const existingCart = localStorage.getItem("cart");
+    let cart = existingCart ? JSON.parse(existingCart) : [];
+
+    const itemInCartIndex = cart.findIndex(
+      (item: Product) => item.id === product?.id
+    );
+
+    if (itemInCartIndex !== -1) {
+      cart = cart.map((item: Product, index: number) =>
+        index === itemInCartIndex
+          ? { ...item, quantity: item.quantity + selectedQuantity }
+          : item
+      );
+    } else {
+      cart.push({ ...product, quantity: selectedQuantity });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    toast.success("Product added to cart!");
+  };
+
   return (
     <section className="py-12">
       <div className="max-w-screen-xl container mx-auto px-4">
@@ -215,9 +238,10 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
                         >
                           Buy Now
                         </button>
+
                         <button
                           className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md"
-                          //onClick={handleBuy}
+                          onClick={handleAddToCart}
                         >
                           Add to Cart
                         </button>
