@@ -17,6 +17,7 @@ const PurchasesPage = () => {
           "http://localhost:9090/product/bought-by-user"
         );
         setPurchases(response.data);
+        console.log(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -46,7 +47,7 @@ const PurchasesPage = () => {
             <hr className="my-4" />
             <div>
               <h2 className="text-lg font-semibold mb-2">Products Bought</h2>
-              {purchase.products.map((product: any, productIndex: number) => (
+              {purchase.purchases.map((product: any, productIndex: number) => (
                 <div key={productIndex} className="mb-2">
                   <p>
                     <strong>ID:</strong> {product.id || "N/A"}
@@ -56,12 +57,12 @@ const PurchasesPage = () => {
                   </p>
                   <p className="status-container">
                     <strong>Status:</strong> {product.status}{" "}
-                    <button
+                    {/* <button
                       className="bg-blue-500 text-white px-3 py-1 rounded-md ml-4"
                       onClick={() => handleStatusChange(product.id)}
                     >
                       Change Status
-                    </button>
+                    </button> */}
                   </p>
                 </div>
               ))}
