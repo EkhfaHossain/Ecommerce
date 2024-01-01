@@ -7,6 +7,7 @@ import CategoryFilter from "@/components/CategoryFilter";
 import Pagination from "@/components/Pagination";
 import PriceFilter from "@/components/PriceFilter";
 import { useRouter } from "next/navigation";
+import { parseCookies } from "nookies";
 
 interface Product {
   id: number;
@@ -27,6 +28,10 @@ const ListProducts = () => {
   const [minPrice, setMinPrice] = useState<number | "">("");
   const [maxPrice, setMaxPrice] = useState<number | "">("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const predefinedCategories = [
     "Electronics",
@@ -68,11 +73,15 @@ const ListProducts = () => {
         if (selectedCategory) {
           url += `&category=${selectedCategory}`;
         }
+        if (isLoggedIn && isAdmin && startDate && endDate) {
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
         console.log(url);
         const response = await axios.get(url);
         setProducts(response.data.products);
         setTotalPages(response.data.totalPages);
         setCurrentPage(page);
+        await fetchUserData();
       } catch (error) {
         console.error("Error fetching products:", error);
       } finally {
@@ -81,7 +90,41 @@ const ListProducts = () => {
     };
 
     fetchProducts(currentPage);
-  }, [currentPage, minPrice, maxPrice, selectedCategory]);
+  }, [
+    currentPage,
+    minPrice,
+    maxPrice,
+    selectedCategory,
+    startDate,
+    endDate,
+    isLoggedIn,
+    isAdmin,
+  ]);
+
+  const fetchUserData = async () => {
+    try {
+      const token = parseCookies().token;
+      setIsLoggedIn(!!token);
+
+      if (!token) {
+        return;
+      }
+
+      const userProfileResponse = await axios.get(
+        `http://localhost:9090/user-profile`,
+        { withCredentials: true }
+      );
+
+      const userRole = userProfileResponse.data?.role;
+      console.log(userRole);
+
+      if (userRole === "admin") {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
   return (
     <section className="py-4">
@@ -94,6 +137,28 @@ const ListProducts = () => {
         onFilterChange={handleFilterChange}
         onFilterClear={handleClearFilters}
       />
+      {isLoggedIn && isAdmin && (
+        <div className="flex items-center justify-center mt-4">
+          <input
+            type="date"
+            className="border-2 border-stone-500 rounded-lg p-2 mr-2"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <input
+            type="date"
+            className="border-2 border-stone-500 rounded-lg p-2 mr-2"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+          <button
+            //onClick={handleDateRangeChange}
+            className="bg-gray-300 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-400 focus:outline-none"
+          >
+            Clear Date Range
+          </button>
+        </div>
+      )}
 
       <div className="max-w-screen-xl container mx-auto px-4 mt-8">
         <div className="md:flex-row -mx-4 flex flex-wrap">
@@ -124,11 +189,6 @@ const ListProducts = () => {
                       ${product.price}
                     </p>
                   </div>
-                  {/* <div className="self-end">
-                    <button className="px-4 mt-4 bg-buttonColor hover:bg-buttonColor text-white py-2 px-4 rounded-md shadow-md">
-                      Buy Now
-                    </button>
-                  </div> */}
                 </div>
               </Link>
             </Card>
