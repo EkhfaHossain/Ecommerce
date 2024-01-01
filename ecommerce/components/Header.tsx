@@ -92,6 +92,11 @@ const Header: React.FC = () => {
                       <div className="justify-between">Checkout</div>
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/userCart" passHref>
+                      <div className="justify-between">Cart</div>
+                    </Link>
+                  </li>
                 </>
               )}
               <li>
