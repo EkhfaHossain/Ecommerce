@@ -3,7 +3,7 @@ import multer from "multer";
 import fs from "fs";
 import path, { parse } from "path";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -29,7 +29,14 @@ export const getAllProducts = async (req: Request, res: Response) => {
     const maxPrice = parseFloat(req.query.max as string);
     const category = req.query.category as string;
 
-    const where: any = {};
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : null;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : null;
+
+    const where: Prisma.productWhereInput = {};
 
     if (!isNaN(minPrice) && !isNaN(maxPrice)) {
       where.price = {
@@ -38,18 +45,21 @@ export const getAllProducts = async (req: Request, res: Response) => {
       };
     }
 
-    //console.log("Category:", category);
+    if (category) {
+      where.categories = {
+        contains: category,
+      };
+    }
 
-    where.categories = {
-      equals: category,
-    };
+    if (startDate && endDate) {
+      where.createdAt = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
 
     totalProducts = await prisma.product.count({
-      where: {
-        categories: {
-          contains: category,
-        },
-      },
+      where,
     });
 
     products = await prisma.product.findMany({
@@ -313,7 +323,6 @@ export const buyProduct = async (req: Request, res: Response) => {
   }
 };
 
-// Backend endpoint to get all purchases with customer details and associated products
 export const getAllPurchasesByAllUsers = async (
   req: Request,
   res: Response
@@ -332,13 +341,11 @@ export const getAllPurchasesByAllUsers = async (
           select: {
             id: true,
             title: true,
-            status: true,
           },
         },
       },
     });
 
-    // Structure data to show purchases by all customers
     const purchasesByCustomers: any = {};
 
     productsBoughtByUsers.forEach((purchase) => {
@@ -351,14 +358,14 @@ export const getAllPurchasesByAllUsers = async (
             name: purchase.user.name,
             email: purchase.user.email,
           },
-          products: [],
+          purchases: [],
         };
       }
 
-      purchasesByCustomers[customerId].products.push({
+      purchasesByCustomers[customerId].purchases.push({
         id: purchase.product.id,
         title: purchase.product.title,
-        status: purchase.product.status,
+        status: purchase.status,
       });
     });
 
@@ -397,7 +404,6 @@ export const getUserPurchasedProducts = async (req: Request, res: Response) => {
       name: userPurchase.product.title,
       price: userPurchase.product.price,
       quantity: userPurchase.quantity,
-      status: userPurchase.product.status,
     }));
 
     res.status(200).json({ products });
