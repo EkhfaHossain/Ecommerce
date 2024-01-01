@@ -6,7 +6,10 @@ export function middleware(req: NextRequest) {
 
   const url = req.url;
 
-  if (!token && url.includes("/update/")) {
+  if (
+    (!token && url.includes("/update/")) ||
+    (!token && url.includes("admin/order-dashboard"))
+  ) {
     return NextResponse.redirect("http://localhost:3000/");
   }
 
