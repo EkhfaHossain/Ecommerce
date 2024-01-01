@@ -12,27 +12,6 @@ interface Product {
 
 const CheckoutPage: React.FC = () => {
   const [cartProducts, setCartProducts] = useState<Product[]>([]);
-
-  const increaseQuantity = (productId: number) => {
-    setCartProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === productId
-          ? { ...product, quantity: product.quantity + 1 }
-          : product
-      )
-    );
-  };
-
-  const decreaseQuantity = (productId: number) => {
-    setCartProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === productId && product.quantity > 1
-          ? { ...product, quantity: product.quantity - 1 }
-          : product
-      )
-    );
-  };
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {
