@@ -8,7 +8,9 @@ import {
   testRoute,
   buyProduct,
   getAllPurchasesByAllUsers,
-  getUserPurchasedProducts,
+  getCheckoutProduct,
+  updateProductStatus,
+  userOrderDashboard,
 } from "../controller/productsController";
 
 import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
@@ -35,6 +37,8 @@ router.delete(
 );
 router.post("/product/buy/:id", buyProduct);
 router.get("/product/bought-by-user", getAllPurchasesByAllUsers);
-router.get("/product/checkout", getUserPurchasedProducts);
+router.get("/product/checkout/:id", getCheckoutProduct);
+router.put("/product/:id/status", updateProductStatus);
+router.get("/product/order-dashboard", userOrderDashboard);
 
 export default router;

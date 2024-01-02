@@ -4,6 +4,7 @@ import fs from "fs";
 import path, { parse } from "path";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { PrismaClient, Prisma } from "@prisma/client";
+import { log } from "console";
 
 const prisma = new PrismaClient();
 
@@ -280,14 +281,14 @@ export const deleteProduct = async (req: Request, res: Response) => {
 export const buyProduct = async (req: Request, res: Response) => {
   try {
     const productId = parseInt(req.params.id);
+    //console.log("Product Id:", productId);
     const { userId, quantity } = req.body;
-    //console.log("User Id:", userId);
-    //console.log("Quantity:", quantity);
+
     const parsedQuantity = parseInt(quantity);
-    //console.log("Parsed Quantity:", parsedQuantity);
+
     const product = await prisma.product.findUnique({
       where: {
-        id: parseInt(req.params.id),
+        id: productId, // Use the retrieved product ID
       },
     });
 
@@ -306,6 +307,7 @@ export const buyProduct = async (req: Request, res: Response) => {
         quantity: parsedQuantity,
       },
     });
+
     const updatedProduct = await prisma.product.update({
       where: {
         id: productId,
@@ -316,9 +318,10 @@ export const buyProduct = async (req: Request, res: Response) => {
         },
       },
     });
-    res.status(200).json({ msg: "Successful!" });
+
+    res.status(200).json(updatedProduct);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -378,10 +381,10 @@ export const getAllPurchasesByAllUsers = async (
   }
 };
 
-export const getUserPurchasedProducts = async (req: Request, res: Response) => {
+export const getCheckoutProduct = async (req: Request, res: Response) => {
   try {
     const token = req.cookies.token;
-    //console.log("User Profile Token:", token);
+    //console.log(token);
 
     if (!token) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -394,21 +397,101 @@ export const getUserPurchasedProducts = async (req: Request, res: Response) => {
     }
 
     const userId = decodedToken.userId;
+    const productId = parseInt(req.params.id);
+    console.log("Checkout Product Id:", productId);
 
-    const userPurchases = await prisma.userProduct.findMany({
-      where: { userId },
+    const userPurchase = await prisma.userProduct.findFirst({
+      where: { userId, productId },
       include: { product: true },
     });
 
-    const products = userPurchases.map((userPurchase) => ({
+    if (!userPurchase) {
+      return res.status(404).json({ error: "Product not found in checkout" });
+    }
+
+    const product = {
       name: userPurchase.product.title,
       price: userPurchase.product.price,
       quantity: userPurchase.quantity,
-    }));
+    };
 
+    res.status(200).json({ product });
+  } catch (error) {
+    console.error("Error fetching checkout product:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const updateProductStatus = async (req: Request, res: Response) => {
+  try {
+    const productId = parseInt(req.params.id);
+    const { status } = req.body;
+    const product = await prisma.userProduct.findFirst({
+      where: {
+        productId: productId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (product) {
+      const userProductId = product.id;
+      //console.log("User Product Id:", userProductId);
+
+      const updatedProduct = await prisma.userProduct.update({
+        where: {
+          id: userProductId,
+        },
+        data: {
+          status,
+        },
+      });
+    }
+
+    res.status(200).json({ product });
+  } catch (error) {
+    console.error("Error updating product status:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const userOrderDashboard = async (req: Request, res: Response) => {
+  try {
+    const token = req.cookies.token;
+    //console.log(token);
+
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const decodedToken: any = jwt.verify(token, "ekh12") as JwtPayload;
+
+    if (!decodedToken.userId) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const userId = decodedToken.userId;
+    //console.log("UserId", userId);
+    const products = await prisma.userProduct.findMany({
+      where: {
+        userId,
+        status: "delivered",
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            title: true,
+            price: true,
+          },
+        },
+      },
+    });
     res.status(200).json({ products });
   } catch (error) {
-    console.error("Error fetching user purchases:", error);
+    console.error("Error fetching products:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
