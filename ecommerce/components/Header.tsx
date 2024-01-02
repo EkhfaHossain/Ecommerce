@@ -88,8 +88,8 @@ const Header: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/userCheckout" passHref>
-                      <div className="justify-between">Checkout</div>
+                    <Link href="/userOrderDashboard" passHref>
+                      <div className="justify-between">Order Dashboard</div>
                     </Link>
                   </li>
                   <li>
