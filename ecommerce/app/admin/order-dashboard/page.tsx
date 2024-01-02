@@ -6,10 +6,6 @@ import axios from "axios";
 const PurchasesPage = () => {
   const [purchases, setPurchases] = useState<any[]>([]);
 
-  const handleStatusChange = (id: number) => {
-    console.log("changed the status");
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -25,6 +21,20 @@ const PurchasesPage = () => {
 
     fetchData();
   }, []);
+
+  const handleStatusChange = async (productId: number) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:9090/product/${productId}/status`,
+        { status: "delivered" },
+        { withCredentials: true }
+      );
+
+      console.log("Status updated to delivered");
+    } catch (error) {
+      console.log("Error updating status:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -57,12 +67,12 @@ const PurchasesPage = () => {
                   </p>
                   <p className="status-container">
                     <strong>Status:</strong> {product.status}{" "}
-                    {/* <button
+                    <button
                       className="bg-blue-500 text-white px-3 py-1 rounded-md ml-4"
                       onClick={() => handleStatusChange(product.id)}
                     >
-                      Change Status
-                    </button> */}
+                      Change Status to Delivered
+                    </button>
                   </p>
                 </div>
               ))}

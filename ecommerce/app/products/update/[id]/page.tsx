@@ -26,7 +26,7 @@ const Update = ({ params }: { params: { id: number } }) => {
     image: null,
   });
 
-  console.log("Product: ", product);
+  //console.log("Product: ", product);
 
   useEffect(() => {
     const fetchSingleProduct = async () => {

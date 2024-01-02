@@ -24,7 +24,6 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [cart, setCart] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,9 +120,10 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
         { withCredentials: true }
       );
 
-      console.log("Product purchased successfully");
-      toast.success("Product purchased successfully!");
+      console.log("Product added to Checkout");
+      toast.success("Product added  to Checkout!");
       setSelectedQuantity(1);
+      router.push(`/userCheckout/${params.id}`);
     } catch (error: any) {
       console.error("Error purchasing product:", error);
 
