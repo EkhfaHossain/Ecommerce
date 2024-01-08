@@ -7,10 +7,16 @@ import {
   deleteProduct,
   testRoute,
   buyProduct,
-  getAllPurchasesByAllUsers,
   getCheckoutProduct,
   updateProductStatus,
   userOrderDashboard,
+  getAdminDashboard,
+  addToCart,
+  getCartProducts,
+  proceedToCheckout,
+  getCartProductsInCheckout,
+  updateCartCheckoutProductStatus,
+  revertBuyCheckout,
 } from "../controller/productsController";
 
 import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
@@ -36,9 +42,15 @@ router.delete(
   deleteProduct
 );
 router.post("/product/buy/:id", buyProduct);
-router.get("/product/bought-by-user", getAllPurchasesByAllUsers);
+router.get("/product/bought-by-user", getAdminDashboard);
 router.get("/product/checkout/:id", getCheckoutProduct);
+router.post("/product/revert-checkout", revertBuyCheckout);
 router.put("/product/:id/status", updateProductStatus);
 router.get("/product/order-dashboard", userOrderDashboard);
+router.post("/product/add-to-cart/:id", addToCart);
+router.get("/product/get-cart-products", getCartProducts);
+router.put("/product/cart/checkout", proceedToCheckout);
+router.get("/product/get-cart/checkout", getCartProductsInCheckout);
+router.put("/product/cart/checkout/status", updateCartCheckoutProductStatus);
 
 export default router;
