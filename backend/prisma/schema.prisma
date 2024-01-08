@@ -41,6 +41,5 @@ model userProduct {
   product          product       @relation(fields: [productId], references: [id])
   productId        Int           // Foreign key to product's ID
   quantity         Int           @default(1)
-  status           String?       @default("checkout")
-
+  status           String?      
 }
