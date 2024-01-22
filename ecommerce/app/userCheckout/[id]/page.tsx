@@ -3,6 +3,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { propagateServerField } from "next/dist/server/lib/render-server";
+import BackButton from "@/components/BackButton";
+import { useCookies } from "react-cookie";
+import socket from "@/app/socket";
 
 interface Product {
   id: number;
@@ -14,7 +17,10 @@ interface Product {
 
 const CheckoutPage = ({ params }: { params: { id: number } }) => {
   const router = useRouter();
+  const [cookies, setCookie, removeCookie] = useCookies(["token"]);
   const [cartProducts, setCartProducts] = useState<Product[]>([]);
+  const token = cookies.token;
+  //console.log("Token", token);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -24,7 +30,6 @@ const CheckoutPage = ({ params }: { params: { id: number } }) => {
             `http://localhost:9090/product/checkout/${params.id}`,
             { withCredentials: true }
           );
-          console.log("Checkout Product:", response.data);
 
           const { product } = response.data;
 
@@ -49,15 +54,74 @@ const CheckoutPage = ({ params }: { params: { id: number } }) => {
         { withCredentials: true }
       );
 
-      console.log("Purchase confirmed successfully");
-      router.push("/");
+      const userProfileResponse = await axios.get(
+        `http://localhost:9090/user-profile`,
+        { withCredentials: true }
+      );
+
+      const userId = userProfileResponse.data?.id;
+
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+
+      const updatedResponse = await axios.get(
+        `http://localhost:9090/product/checkout/${params.id}`,
+        { withCredentials: true }
+      );
+
+      const { product } = updatedResponse.data;
+
+      if (product && typeof product === "object") {
+        setCartProducts([product]);
+
+        console.log("Purchase confirmed successfully");
+
+        socket.emit("orderPlaced", {
+          productId: params.id,
+          userId,
+          productDetails: product,
+        });
+
+        router.push("/");
+      } else {
+        console.error("Invalid product data received:", product);
+      }
     } catch (error) {
       console.log("Error Purchasing Product", error);
     }
   };
 
+  const handleBackFromCheckout = async () => {
+    try {
+      const userProfileResponse = await axios.get(
+        `http://localhost:9090/user-profile`,
+        { withCredentials: true }
+      );
+
+      const userId = userProfileResponse.data?.id;
+
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+
+      await axios.post(
+        `http://localhost:9090/product/revert-checkout`,
+        { userId },
+        { withCredentials: true }
+      );
+
+      console.log("Checkout status reverted successfully");
+    } catch (error) {
+      console.error("Error reverting checkout status:", error);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <BackButton onClick={handleBackFromCheckout} text="Back" />
       <h1 className="text-2xl font-bold mb-4 text-center">Checkout</h1>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">

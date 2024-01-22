@@ -1,5 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { NextRouter } from "next/router";
+import BackButton from "@/components/BackButton";
 
 interface Product {
   id: number;
@@ -7,17 +11,33 @@ interface Product {
   title: string;
   price: number;
   quantity: number;
+  product: {
+    id: number;
+    title: string;
+    price: number;
+  };
 }
 
 const Cart: React.FC = () => {
+  const router = useRouter();
+
   const [cart, setCart] = useState<Product[]>([]);
 
-  useEffect(() => {
-    const storedCart = localStorage.getItem("cart");
-    if (storedCart) {
-      const parsedCart: Product[] = JSON.parse(storedCart);
-      setCart(parsedCart);
+  const fetchCartProducts = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:9090/product/get-cart-products`,
+        { withCredentials: true }
+      );
+      console.log("Cart Product:", response.data.products);
+      setCart(response.data.products);
+    } catch (error) {
+      console.log(error);
     }
+  };
+
+  useEffect(() => {
+    fetchCartProducts();
   }, []);
 
   const increaseQuantity = (productId: number) => {
@@ -48,11 +68,30 @@ const Cart: React.FC = () => {
   };
 
   const totalPrice = (item: Product) => {
-    return (item.price * item.quantity).toFixed(2);
+    return (item.product.price * item.quantity).toFixed(2);
+  };
+
+  const handleProceedToCheckout = async () => {
+    try {
+      const productIDs = cart.map((item) => item.id);
+      console.log(productIDs);
+
+      await axios.put(
+        `http://localhost:9090/product/cart/checkout`,
+        { productIDs },
+        { withCredentials: true }
+      );
+
+      console.log("Products updated to checkout successfully");
+      router.push("/cartCheckout");
+    } catch (error) {
+      console.error("Error updating products to checkout", error);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <BackButton />
       <h1 className="text-2xl font-bold mb-4 text-center">Shopping Cart</h1>
 
       {cart.length === 0 ? (
@@ -74,7 +113,7 @@ const Cart: React.FC = () => {
                 key={item.id}
                 className="flex items-center justify-between px-4 py-4"
               >
-                <span>{item.title}</span>
+                <span>{item.product?.title}</span>
                 <div className="flex items-center mt-4 justify-center">
                   <button
                     type="button"
@@ -92,7 +131,7 @@ const Cart: React.FC = () => {
                     +
                   </button>
                 </div>
-                <span>${item.price}</span>
+                <span>${item.product.price}</span>
                 <span>${totalPrice(item)}</span>
                 <button
                   className="text-red-500"
@@ -108,7 +147,10 @@ const Cart: React.FC = () => {
 
       {cart.length > 0 && (
         <div className="flex justify-center mt-4">
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-md">
+          <button
+            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+            onClick={handleProceedToCheckout}
+          >
             Proceed to Checkout
           </button>
         </div>

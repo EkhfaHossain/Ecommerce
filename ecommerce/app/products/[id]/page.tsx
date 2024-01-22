@@ -6,6 +6,7 @@ import Link from "next/link";
 import { parseCookies } from "nookies";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import BackButton from "@/components/BackButton";
 
 interface Product {
   image: string;
@@ -145,31 +146,44 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
     );
   };
 
-  const handleAddToCart = () => {
-    const existingCart = localStorage.getItem("cart");
-    let cart = existingCart ? JSON.parse(existingCart) : [];
-
-    const itemInCartIndex = cart.findIndex(
-      (item: Product) => item.id === product?.id
-    );
-
-    if (itemInCartIndex !== -1) {
-      cart = cart.map((item: Product, index: number) =>
-        index === itemInCartIndex
-          ? { ...item, quantity: item.quantity + selectedQuantity }
-          : item
+  const handleAddToCart = async () => {
+    try {
+      const userProfileResponse = await axios.get(
+        `http://localhost:9090/user-profile`,
+        { withCredentials: true }
       );
-    } else {
-      cart.push({ ...product, quantity: selectedQuantity });
-    }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    toast.success("Product added to cart!");
+      const userId = userProfileResponse.data?.id;
+      //console.log(userId);
+
+      if (!userId) {
+        console.error("User ID not found");
+        return;
+      }
+      //console.log(selectedQuantity);
+      const addToCartProduct = await axios.post(
+        `http://localhost:9090/product/add-to-cart/${params.id}`,
+        { userId, quantity: selectedQuantity },
+        { withCredentials: true }
+      );
+
+      console.log("Product added to Cart");
+      toast.success("Product added  to Cart!");
+    } catch (error: any) {
+      console.error("Error adding product to the cart:", error);
+
+      if (error.response && error.response.status === 400) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error("Error addding product to the cart . Please try again.");
+      }
+    }
   };
 
   return (
     <section className="py-12">
       <div className="max-w-screen-xl container mx-auto px-4">
+        <BackButton />
         <div className="md:flex-row -mx-4 flex justify-center items-center h-full">
           {product ? (
             <Card>
