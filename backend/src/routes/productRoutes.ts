@@ -17,6 +17,7 @@ import {
   getCartProductsInCheckout,
   updateCartCheckoutProductStatus,
   revertBuyCheckout,
+  revertCartCheckout,
 } from "../controller/productsController";
 
 import { authenticateAndAuthorizeMiddleware } from "../middleware/authMiddleWare";
@@ -52,5 +53,6 @@ router.get("/product/get-cart-products", getCartProducts);
 router.put("/product/cart/checkout", proceedToCheckout);
 router.get("/product/get-cart/checkout", getCartProductsInCheckout);
 router.put("/product/cart/checkout/status", updateCartCheckoutProductStatus);
+router.post("/product/cart/checkout/revert-checkout", revertCartCheckout);
 
 export default router;

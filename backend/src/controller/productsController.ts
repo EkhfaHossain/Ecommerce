@@ -335,12 +335,10 @@ export const revertBuyCheckout = async (req: Request, res: Response) => {
       },
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Checkout reverted successfully",
-        deletedCheckoutProducts,
-      });
+    res.status(200).json({
+      message: "Checkout reverted successfully",
+      deletedCheckoutProducts,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -354,48 +352,17 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
         status: "processing",
       },
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
         product: {
           select: {
             id: true,
             title: true,
+            quantity: true,
           },
         },
       },
     });
 
-    const purchasesByCustomers: any = {};
-
-    productsBoughtByUsers.forEach((purchase) => {
-      const customerId = purchase.user.id;
-
-      if (!purchasesByCustomers[customerId]) {
-        purchasesByCustomers[customerId] = {
-          customer: {
-            id: purchase.user.id,
-            name: purchase.user.name,
-            email: purchase.user.email,
-          },
-          purchases: [],
-        };
-      }
-
-      purchasesByCustomers[customerId].purchases.push({
-        id: purchase.product.id,
-        title: purchase.product.title,
-        status: purchase.status,
-      });
-    });
-
-    const purchases = Object.values(purchasesByCustomers);
-
-    res.status(200).json(purchases);
+    res.status(200).json(productsBoughtByUsers);
   } catch (error) {
     console.error("Error fetching purchases:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -419,7 +386,7 @@ export const getCheckoutProduct = async (req: Request, res: Response) => {
 
     const userId = decodedToken.userId;
     const productId = parseInt(req.params.id);
-    console.log("Checkout Product Id:", productId);
+    //console.log("Checkout Product Id:", productId);
 
     const userPurchase = await prisma.userProduct.findFirst({
       where: { userId, productId },
@@ -520,39 +487,55 @@ export const userOrderDashboard = async (req: Request, res: Response) => {
 export const addToCart = async (req: Request, res: Response) => {
   try {
     const productId = parseInt(req.params.id);
-    // console.log("Product Id: ", productId);
     const { userId, quantity } = req.body;
-    //console.log("User Id: ", userId);
-    //console.log("Quantity: ", quantity);
 
     const parsedQuantity = parseInt(quantity);
-    console.log("Quantity: ", parsedQuantity);
 
-    const product = await prisma.product.findUnique({
+    const existingCartItem = await prisma.userProduct.findFirst({
       where: {
-        id: productId,
-      },
-    });
-
-    if (!product) {
-      return res.status(404).json({ error: "Product not found" });
-    }
-    if (product.quantity < parsedQuantity) {
-      return res.status(400).json({ error: "Product is out of stock" });
-    }
-
-    const cartItem = await prisma.userProduct.create({
-      data: {
         userId: userId,
         productId: productId,
-        quantity: parsedQuantity,
         status: "cart",
       },
     });
 
-    res
-      .status(200)
-      .json({ message: "Product added to cart successfully", cartItem });
+    if (existingCartItem) {
+      const updatedCartItem = await prisma.userProduct.update({
+        where: { id: existingCartItem.id },
+        data: { quantity: existingCartItem.quantity + parsedQuantity },
+      });
+
+      res.status(200).json({
+        message: "Product quantity updated in cart",
+        cartItem: updatedCartItem,
+      });
+    } else {
+      const product = await prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+      });
+
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      if (product.quantity < parsedQuantity) {
+        return res.status(400).json({ error: "Product is out of stock" });
+      }
+
+      const cartItem = await prisma.userProduct.create({
+        data: {
+          userId: userId,
+          productId: productId,
+          quantity: parsedQuantity,
+          status: "cart",
+        },
+      });
+
+      res
+        .status(200)
+        .json({ message: "Product added to cart successfully", cartItem });
+    }
   } catch (error) {
     console.error("Error adding product to cart:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -687,6 +670,27 @@ export const getCartProductsInCheckout = async (
   }
 };
 
+export const revertCartCheckout = async (req: Request, res: Response) => {
+  try {
+    const userId = req.body.userId;
+
+    const updatedCheckoutProducts = await prisma.userProduct.updateMany({
+      where: {
+        userId,
+        status: "checkout",
+      },
+      data: {
+        status: "cart",
+      },
+    });
+    res.status(200).json({
+      message: "Checkout reverted successfully",
+      updatedCheckoutProducts,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 export const updateCartCheckoutProductStatus = async (
   req: Request,
   res: Response
@@ -730,6 +734,19 @@ export const updateCartCheckoutProductStatus = async (
     res.status(200).json({ message: "Status updated successfully" });
   } catch (error) {
     console.error("Error updating product status:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const buyOrderPlacedNotificationAdmin = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { orderId } = req.body;
+
+    res.status(200).json({ message: "Notification sent to admin" });
+  } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
