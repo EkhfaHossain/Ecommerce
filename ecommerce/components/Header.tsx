@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { parseCookies } from "nookies";
 import LogoutButton from "./LogoutButton";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -27,11 +26,11 @@ const Header: React.FC = () => {
   useEffect(() => {
     checkLoggedInStatus();
 
-    const interval = setInterval(() => {
-      checkLoggedInStatus();
-    }, 1000);
+    // const interval = setInterval(() => {
+    //   checkLoggedInStatus();
+    // }, 1000);
 
-    return () => clearInterval(interval);
+    // return () => clearInterval(interval);
   }, []);
 
   return (
@@ -79,6 +78,11 @@ const Header: React.FC = () => {
                       <div className="justify-between">Order Dashboard</div>
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/admin/notification" passHref>
+                      <div className="justify-between">Notification</div>
+                    </Link>
+                  </li>
                 </>
               ) : (
                 <>
@@ -95,6 +99,11 @@ const Header: React.FC = () => {
                   <li>
                     <Link href="/userCart" passHref>
                       <div className="justify-between">Cart</div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/userNotification" passHref>
+                      <div className="justify-between">Notifications</div>
                     </Link>
                   </li>
                 </>
