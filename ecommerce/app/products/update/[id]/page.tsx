@@ -3,21 +3,25 @@ import React, { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-interface Product {
+interface UpdateProps {
+  params: { id: number };
+}
+
+interface UpdateFormData {
   title: string;
   description: string;
   categories: string;
   price: number;
   quantity: number;
-  image: File | null | string;
+  image: File | null;
 }
 
-const Update = ({ params }: { params: { id: number } }) => {
+const Update: React.FC<UpdateProps> = ({ params }) => {
   const router = useRouter();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<UpdateFormData | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState<Product>({
+  const [formData, setFormData] = useState<UpdateFormData>({
     title: "",
     description: "",
     categories: "",
@@ -26,55 +30,41 @@ const Update = ({ params }: { params: { id: number } }) => {
     image: null,
   });
 
-  //console.log("Product: ", product);
-
   useEffect(() => {
-    const fetchSingleProduct = async () => {
-      try {
-        if (params.id) {
-          const response = await axios.get(
-            `http://localhost:9090/products/${params.id}`
-          );
-          setProduct(response.data);
-          setFormData(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching product:", error);
-      }
-    };
-
     fetchSingleProduct();
   }, [params.id]);
+
+  const fetchSingleProduct = async () => {
+    try {
+      if (params.id) {
+        const response = await axios.get(
+          `http://localhost:9090/products/${params.id}`
+        );
+        setProduct(response.data);
+        setFormData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
       setIsSaving(true);
-      const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("price", formData.price.toString());
-      formDataToSend.append("categories", formData.categories);
-      formDataToSend.append("quantity", formData.quantity.toString());
-      formDataToSend.append("description", formData.description);
+      const formDataToSend = prepareFormData(formData);
+      const url = `http://localhost:9090/product/update/${params.id}`;
 
-      if (formData.image instanceof File) {
-        formDataToSend.append("image", formData.image);
-      }
-
-      const response = await axios.put(
-        `http://localhost:9090/product/update/${params.id}`,
-        formDataToSend,
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.put(url, formDataToSend, {
+        withCredentials: true,
+      });
 
       console.log("Product updated:", response.data);
       setTimeout(() => {
-        router.push(`/products/${params.id}`); // Redirect to single product page
+        router.push(`/products/${params.id}`);
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("An error occurred while updating:", error);
     } finally {
       setIsSaving(false);
@@ -102,13 +92,31 @@ const Update = ({ params }: { params: { id: number } }) => {
         image: file,
       }));
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        console.log(setImagePreview);
-      };
-      reader.readAsDataURL(file);
+      updateImagePreview(file);
     }
+  };
+
+  const updateImagePreview = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const prepareFormData = (formData: UpdateFormData): FormData => {
+    const formDataToSend = new FormData();
+    formDataToSend.append("title", formData.title);
+    formDataToSend.append("price", formData.price.toString());
+    formDataToSend.append("categories", formData.categories);
+    formDataToSend.append("quantity", formData.quantity.toString());
+    formDataToSend.append("description", formData.description);
+
+    if (formData.image instanceof File) {
+      formDataToSend.append("image", formData.image);
+    }
+
+    return formDataToSend;
   };
 
   return (

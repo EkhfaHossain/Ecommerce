@@ -12,7 +12,34 @@ interface Product {
   image: File | null | string;
 }
 
-const Form: React.FC = () => {
+interface FormProps {
+  onSubmitSuccess: () => void;
+}
+
+export const submitFormData = async (formData: Product) => {
+  const formDataToSend = new FormData();
+  formDataToSend.append("title", formData.title);
+  formDataToSend.append("price", formData.price.toString());
+  formDataToSend.append("categories", formData.categories);
+  formDataToSend.append("quantity", formData.quantity.toString());
+  formDataToSend.append("description", formData.description);
+
+  if (formData.image instanceof File) {
+    formDataToSend.append("image", formData.image);
+  }
+
+  const response = await axios.post(
+    `http://localhost:9090/product/create`,
+    formDataToSend,
+    {
+      withCredentials: true,
+    }
+  );
+
+  return response;
+};
+
+const Form: React.FC<FormProps> = ({ onSubmitSuccess }) => {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -29,28 +56,11 @@ const Form: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("formDataTesting", formData);
 
     try {
       setIsSaving(true);
-      const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("price", formData.price.toString());
-      formDataToSend.append("categories", formData.categories);
-      formDataToSend.append("quantity", formData.quantity.toString());
-      formDataToSend.append("description", formData.description);
+      const response = await submitFormData(formData);
 
-      if (formData.image instanceof File) {
-        formDataToSend.append("image", formData.image);
-      }
-
-      const response = await axios.post(
-        `http://localhost:9090/product/create`,
-        formDataToSend,
-        {
-          withCredentials: true,
-        }
-      );
       console.log("Product submitted:", response.data);
       setFormData({
         title: "",
@@ -61,11 +71,12 @@ const Form: React.FC = () => {
         image: null,
       });
       setTimeout(() => {
-        router.push(`/products/`); // Redirect to single product page
+        router.push(`/products/`);
+        onSubmitSuccess();
       }, 2000);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Clear file input field
+        fileInputRef.current.value = "";
       }
     } catch (error) {
       console.error("An error occurred", error);
@@ -76,7 +87,6 @@ const Form: React.FC = () => {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    //console.log("Input Changed - Name:", name, "Value:", value);
     setFormData((prevFormData) => ({
       ...prevFormData,
       [name]: value,
