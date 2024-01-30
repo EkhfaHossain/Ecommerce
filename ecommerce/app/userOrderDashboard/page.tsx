@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 
 interface Product {
   id: number;
@@ -17,23 +16,22 @@ interface Product {
 }
 
 const OrderDashboard = () => {
-  const router = useRouter();
   const [dashboardProducts, setDashboardProducts] = useState<Product[]>([]);
+  const [error, setError] = useState<string>("");
+
+  const fetchProducts = async () => {
+    try {
+      const url = `http://localhost:9090/product/order-dashboard`;
+      const response = await axios.get(url, { withCredentials: true });
+      setDashboardProducts(response.data.products);
+      console.log("Fetched Order Dashboard Products");
+    } catch (error: any) {
+      console.log("Error Fetching Order Dashboard Products");
+      setError("Error Fetching Order Dashboard Products");
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:9090/product/order-dashboard`,
-          { withCredentials: true }
-        );
-        console.log("Order Dashboard Products:", response.data);
-
-        setDashboardProducts(response.data.products);
-      } catch (error) {
-        console.log(error);
-      }
-    };
     fetchProducts();
   }, []);
 
