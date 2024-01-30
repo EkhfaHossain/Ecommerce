@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 interface PriceFilterProps {
-  onFilterChange: (filterValues: { min: number; max: number }) => void;
+  onFilterChange: (min: number, max: number) => void;
   onFilterClear: () => void;
 }
 
@@ -21,13 +21,13 @@ const PriceFilter: React.FC<PriceFilterProps> = ({ onFilterChange }) => {
   const handleFilterClick = () => {
     const min = minPrice === "" ? 0 : minPrice;
     const max = maxPrice === "" ? Infinity : maxPrice;
-    onFilterChange({ min, max });
+    onFilterChange(min, max);
   };
 
   const handleClearFiltersClick = () => {
-    setMinPrice(""); // Clear minimum price
-    setMaxPrice(""); // Clear maximum price
-    onFilterChange({ min: 0, max: Infinity }); // Trigger filter change with default values
+    setMinPrice("");
+    setMaxPrice("");
+    onFilterChange(0, Infinity);
   };
 
   return (
