@@ -1,12 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import Link from "next/link";
 import Card from "@/components/Card";
 import CategoryFilter from "@/components/CategoryFilter";
 import Pagination from "@/components/Pagination";
 import PriceFilter from "@/components/PriceFilter";
-import { useRouter } from "next/navigation";
 import { parseCookies } from "nookies";
 
 interface Product {
@@ -19,15 +18,22 @@ interface Product {
   image: File | null | string;
 }
 
+interface Filters {
+  minPrice: number | "";
+  maxPrice: number | "";
+  selectedCategory: string | null;
+}
+
 const ListProducts = () => {
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [minPrice, setMinPrice] = useState<number | "">("");
-  const [maxPrice, setMaxPrice] = useState<number | "">("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({
+    minPrice: "",
+    maxPrice: "",
+    selectedCategory: null,
+  });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [startDate, setStartDate] = useState<string>("");
@@ -41,65 +47,24 @@ const ListProducts = () => {
     "Sports",
   ];
 
-  const handlePageChange = (page: any) => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const handleFilterChange = ({ min, max }: { min: number; max: number }) => {
-    setMinPrice(min);
-    setMaxPrice(max);
+  const handleFilterChange = (min: number, max: number) => {
+    setFilters({ ...filters, minPrice: min, maxPrice: max });
     setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
-    setMinPrice("");
-    setMaxPrice("");
+    setFilters({ ...filters, minPrice: "", maxPrice: "" });
     setCurrentPage(1);
   };
 
   const handleCategoryChange = (category: string | null) => {
-    setSelectedCategory(category);
+    setFilters({ ...filters, selectedCategory: category });
     setCurrentPage(1);
   };
-
-  useEffect(() => {
-    const fetchProducts = async (page: any) => {
-      setIsLoading(true);
-      try {
-        let url = `http://localhost:9090/products?page=${page}`;
-        if (minPrice !== "" && maxPrice !== "") {
-          url += `&min=${minPrice}&max=${maxPrice}`;
-        }
-        if (selectedCategory) {
-          url += `&category=${selectedCategory}`;
-        }
-        if (isLoggedIn && isAdmin && startDate && endDate) {
-          url += `&startDate=${startDate}&endDate=${endDate}`;
-        }
-        console.log(url);
-        const response = await axios.get(url);
-        setProducts(response.data.products);
-        setTotalPages(response.data.totalPages);
-        setCurrentPage(page);
-        await fetchUserData();
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts(currentPage);
-  }, [
-    currentPage,
-    minPrice,
-    maxPrice,
-    selectedCategory,
-    startDate,
-    endDate,
-    isLoggedIn,
-    isAdmin,
-  ]);
 
   const fetchUserData = async () => {
     try {
@@ -110,10 +75,11 @@ const ListProducts = () => {
         return;
       }
 
-      const userProfileResponse = await axios.get(
-        `http://localhost:9090/user-profile`,
-        { withCredentials: true }
-      );
+      const url = `http://localhost:9090/user-profile`;
+
+      const userProfileResponse = await axios.get(url, {
+        withCredentials: true,
+      });
 
       const userRole = userProfileResponse.data?.role;
       console.log(userRole);
@@ -122,9 +88,50 @@ const ListProducts = () => {
         setIsAdmin(true);
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching user profile:", error);
     }
   };
+
+  const fetchProducts = async (page: number) => {
+    setIsLoading(true);
+    try {
+      let url = `http://localhost:9090/products?page=${page}`;
+
+      if (filters.minPrice !== "" && filters.maxPrice !== "") {
+        url += `&min=${filters.minPrice}&max=${filters.maxPrice}`;
+      }
+
+      if (filters.selectedCategory) {
+        url += `&category=${filters.selectedCategory}`;
+      }
+      if (isLoggedIn && isAdmin && startDate && endDate) {
+        url += `&startDate=${startDate}&endDate=${endDate}`;
+      }
+      console.log(url);
+      const response = await axios.get(url);
+      setProducts(response.data.products);
+      setTotalPages(response.data.totalPages);
+      setCurrentPage(page);
+      await fetchUserData();
+    } catch (error: any) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(currentPage);
+  }, [
+    currentPage,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.selectedCategory,
+    startDate,
+    endDate,
+    isLoggedIn,
+    isAdmin,
+  ]);
 
   return (
     <section className="py-4">

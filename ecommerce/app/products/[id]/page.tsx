@@ -18,6 +18,71 @@ interface Product {
   quantity: number;
 }
 
+export const getProductById = async (productId: number) => {
+  return await axios.get(`http://localhost:9090/products/${productId}`, {
+    withCredentials: true,
+  });
+};
+
+export const getUserRole = async () => {
+  const userProfileResponse = await axios.get(
+    `http://localhost:9090/user-profile`,
+    { withCredentials: true }
+  );
+  return userProfileResponse.data?.role;
+};
+
+export const getUserId = async () => {
+  const userProfileResponse = await axios.get(
+    `http://localhost:9090/user-profile`,
+    { withCredentials: true }
+  );
+  return userProfileResponse.data?.id;
+};
+
+export const purchaseProduct = async (
+  productId: number,
+  userId: number,
+  quantity: number
+) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:9090/product/buy/${productId}`,
+      { userId, quantity },
+      { withCredentials: true }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteProduct = async (productId: number) => {
+  try {
+    const response = await axios.delete(
+      `http://localhost:9090/product/delete/${productId}`,
+      { withCredentials: true }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const addToCart = async (
+  productId: number,
+  userId: number,
+  quantity: number
+) => {
+  return await axios.post(
+    `http://localhost:9090/product/add-to-cart/${productId}`,
+    { userId, quantity },
+    { withCredentials: true }
+  );
+};
+
 const SingleProduct = ({ params }: { params: { id: number } }) => {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -26,24 +91,20 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (params.id) {
-          const response = await axios.get(
-            `http://localhost:9090/products/${params.id}`,
-            { withCredentials: true }
-          );
-          setProduct(response.data);
-          console.log(response.data);
-        }
-
-        await fetchUserData();
-      } catch (error) {
-        console.error("Error fetching product or user data:", error);
+  const fetchData = async () => {
+    try {
+      if (params.id) {
+        const response = await getProductById(params.id);
+        setProduct(response.data);
+        console.log("Fetched Product Successfully");
       }
-    };
+      await fetchUserData();
+    } catch (error: any) {
+      console.log("Error Fetching Product");
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [params.id]);
 
@@ -56,20 +117,14 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
         return;
       }
 
-      const userProfileResponse = await axios.get(
-        `http://localhost:9090/user-profile`,
-        { withCredentials: true }
-      );
-
-      const userRole = userProfileResponse.data?.role;
-      console.log(userRole);
+      const userRole = await getUserRole();
+      console.log("Fetched User Role Successfully");
 
       if (userRole === "admin") {
         setIsAdmin(true);
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      toast.error("Error fetching user data");
+    } catch (error: any) {
+      console.log("Error fetching user data");
     }
   };
 
@@ -77,62 +132,39 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
     try {
       setIsDeleting(true);
       if (product && product.id) {
-        const deleteProduct = await axios.delete(
-          `http://localhost:9090/product/delete/${product.id}`,
-          {
-            withCredentials: true,
-          }
-        );
+        await deleteProduct(product.id);
         console.log("Product deleted successfully");
         toast.error("Product deleted successfully");
 
         setProduct(null);
-
         setIsDeleting(false);
 
         setTimeout(() => {
           router.push(`/products/`);
         }, 1000);
       }
-    } catch (error) {
-      console.log("Error Deleting Product", error);
-      toast.error("Error deleting product. Please try again.");
+    } catch (error: any) {
+      console.log("Error Deleting Product");
     }
   };
 
   const handleBuy = async () => {
     try {
-      const userProfileResponse = await axios.get(
-        `http://localhost:9090/user-profile`,
-        { withCredentials: true }
-      );
-
-      const userId = userProfileResponse.data?.id;
-      //console.log(userId);
+      const userId = await getUserId();
+      console.log("Fetched User Id Successfully");
 
       if (!userId) {
         console.error("User ID not found");
         return;
       }
-      //console.log(selectedQuantity);
-      const buyProduct = await axios.post(
-        `http://localhost:9090/product/buy/${params.id}`,
-        { userId, quantity: selectedQuantity },
-        { withCredentials: true }
-      );
 
+      await purchaseProduct(params.id, userId, selectedQuantity);
       console.log("Product added to Checkout");
-      toast.success("Product added  to Checkout!");
+      toast.success("Product added  to Checkout");
       setSelectedQuantity(1);
       router.push(`/userCheckout/${params.id}`);
-    } catch (error: any) {
-      console.error("Error purchasing product:", error);
-
-      if (error.response && error.response.status === 400) {
-        toast.error(error.response.data.error);
-      } else {
-        toast.error("Error purchasing product. Please try again.");
-      }
+    } catch (error) {
+      console.log("Error adding to Checkout");
     }
   };
 
@@ -148,35 +180,17 @@ const SingleProduct = ({ params }: { params: { id: number } }) => {
 
   const handleAddToCart = async () => {
     try {
-      const userProfileResponse = await axios.get(
-        `http://localhost:9090/user-profile`,
-        { withCredentials: true }
-      );
-
-      const userId = userProfileResponse.data?.id;
-      //console.log(userId);
-
+      const userId = await getUserId();
       if (!userId) {
         console.error("User ID not found");
         return;
       }
-      //console.log(selectedQuantity);
-      const addToCartProduct = await axios.post(
-        `http://localhost:9090/product/add-to-cart/${params.id}`,
-        { userId, quantity: selectedQuantity },
-        { withCredentials: true }
-      );
 
+      await addToCart(params.id, userId, selectedQuantity);
       console.log("Product added to Cart");
       toast.success("Product added  to Cart!");
     } catch (error: any) {
-      console.error("Error adding product to the cart:", error);
-
-      if (error.response && error.response.status === 400) {
-        toast.error(error.response.data.error);
-      } else {
-        toast.error("Error addding product to the cart . Please try again.");
-      }
+      console.log("Error adding product to the Cart");
     }
   };
 
