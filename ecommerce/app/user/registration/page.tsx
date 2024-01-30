@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, ChangeEvent, useRef } from "react";
 import Link from "next/link";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,57 @@ interface User {
   password: string;
   confirmPassword: string;
 }
+
+interface RegistrationResponse {
+  message: string;
+}
+
+interface Router {
+  push(route: string): void;
+}
+
+export const registrationService = async (
+  formData: User,
+  router: Router,
+  setFormData: React.Dispatch<React.SetStateAction<User>>,
+  setRegistrationSuccess: React.Dispatch<React.SetStateAction<boolean>>
+): Promise<void> => {
+  try {
+    const url = "http://localhost:9090/registration";
+    console.log("Registration service called with formData:", formData);
+    const response: AxiosResponse<RegistrationResponse> = await axios.post(
+      url,
+      formData
+    );
+    console.log("Registration service response:", response);
+
+    if (response.status === 200 || response.status === 201) {
+      console.log("Registration successful!");
+
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      setRegistrationSuccess(true);
+
+      toast.success("Registration successful!");
+
+      router.push("/user/registration/login");
+    } else {
+      console.error("Registration failed");
+      setRegistrationSuccess(false);
+      toast.error("Registration failed. Please try again.");
+    }
+  } catch (error: any) {
+    console.log("Error", error);
+    setRegistrationSuccess(false);
+    if (error.response && error.response.status === 400) {
+      toast.error("Email already exists. Please use a different email.");
+    }
+  }
+};
 
 const register: React.FC = () => {
   const router = useRouter();
@@ -46,33 +97,15 @@ const register: React.FC = () => {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:9090/registration",
-        formData
+      await registrationService(
+        formData,
+        router,
+        setFormData,
+        setRegistrationSuccess
       );
-      if (response.status === 200 || response.status === 201) {
-        console.log("Registration successful!");
-
-        setFormData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
-        setRegistrationSuccess(true);
-        toast.success("Registration successful!");
-        router.push("/user/registration/login");
-      } else {
-        console.error("Registration failed");
-        setRegistrationSuccess(false);
-        toast.error("Registration failed. Please try again.");
-      }
     } catch (error: any) {
       console.log("Error", error);
       setRegistrationSuccess(false);
-      if (error.response && error.response.status === 400) {
-        toast.error("Email already exists. Please use a different email.");
-      }
     }
   };
 

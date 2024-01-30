@@ -39,6 +39,7 @@ const PurchasesPage = () => {
           "http://localhost:9090/product/bought-by-user"
         );
         setPurchases(response.data);
+        console.log("Fetched data");
       } catch (error) {
         console.error("Error fetching data:", error);
       }
