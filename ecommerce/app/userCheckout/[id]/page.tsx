@@ -6,6 +6,7 @@ import { propagateServerField } from "next/dist/server/lib/render-server";
 import BackButton from "@/components/BackButton";
 import { useCookies } from "react-cookie";
 import socket from "@/app/socket";
+import toast from "react-hot-toast";
 
 interface Product {
   id: number;
@@ -14,6 +15,43 @@ interface Product {
   quantity: number;
   status: string;
 }
+export const fetchProduct = async (productId: number): Promise<Product> => {
+  try {
+    const url = `http://localhost:9090/product/checkout/${productId}`;
+    const response = await axios.get(url, { withCredentials: true });
+
+    const { product } = response.data;
+
+    if (product && typeof product === "object") {
+      return product;
+    } else {
+      throw new Error("Invalid product data received");
+    }
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    throw new Error("Failed to fetch product");
+  }
+};
+
+export const confirmPurchase = async (productId: number): Promise<void> => {
+  try {
+    const url = `http://localhost:9090/product/${productId}/status`;
+    await axios.put(url, { status: "processing" }, { withCredentials: true });
+  } catch (error) {
+    console.log("Error Confirming Purchase", error);
+    throw error;
+  }
+};
+
+export const revertCheckout = async (userId: number): Promise<void> => {
+  try {
+    const url = `http://localhost:9090/product/revert-checkout`;
+    await axios.post(url, { userId }, { withCredentials: true });
+  } catch (error) {
+    console.error("Error Reverting Checkout Status", error);
+    throw error;
+  }
+};
 
 const CheckoutPage = ({ params }: { params: { id: number } }) => {
   const router = useRouter();
@@ -21,43 +59,34 @@ const CheckoutPage = ({ params }: { params: { id: number } }) => {
   const [cartProducts, setCartProducts] = useState<Product[]>([]);
   const token = cookies.token;
   //console.log("Token", token);
+  const fetchData = async () => {
+    try {
+      if (params.id) {
+        const product = await fetchProduct(params.id);
+
+        if (product) {
+          setCartProducts([product]);
+        } else {
+          console.error("Invalid product data received:", product);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        if (params.id) {
-          const response = await axios.get(
-            `http://localhost:9090/product/checkout/${params.id}`,
-            { withCredentials: true }
-          );
-
-          const { product } = response.data;
-
-          if (product && typeof product === "object") {
-            setCartProducts([product]);
-          } else {
-            console.error("Invalid product data received:", product);
-          }
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchProducts();
+    fetchData();
   }, []);
 
   const handleConfirmPurchase = async () => {
     try {
-      const response = await axios.put(
-        `http://localhost:9090/product/${params.id}/status`,
-        { status: "processing" },
-        { withCredentials: true }
-      );
+      await confirmPurchase(params.id);
+      const url = `http://localhost:9090/user-profile`;
 
-      const userProfileResponse = await axios.get(
-        `http://localhost:9090/user-profile`,
-        { withCredentials: true }
-      );
+      const userProfileResponse = await axios.get(url, {
+        withCredentials: true,
+      });
 
       const userId = userProfileResponse.data?.id;
 
@@ -66,18 +95,13 @@ const CheckoutPage = ({ params }: { params: { id: number } }) => {
         return;
       }
 
-      const updatedResponse = await axios.get(
-        `http://localhost:9090/product/checkout/${params.id}`,
-        { withCredentials: true }
-      );
+      const product = await fetchProduct(params.id);
 
-      const { product } = updatedResponse.data;
-
-      if (product && typeof product === "object") {
+      if (product) {
         setCartProducts([product]);
 
         console.log("Purchase confirmed successfully");
-
+        toast.success("Purchase confirmed successfully");
         socket.emit("orderPlaced", {
           productId: params.id,
           userId,
@@ -95,10 +119,10 @@ const CheckoutPage = ({ params }: { params: { id: number } }) => {
 
   const handleBackFromCheckout = async () => {
     try {
-      const userProfileResponse = await axios.get(
-        `http://localhost:9090/user-profile`,
-        { withCredentials: true }
-      );
+      const url = `http://localhost:9090/user-profile`;
+      const userProfileResponse = await axios.get(url, {
+        withCredentials: true,
+      });
 
       const userId = userProfileResponse.data?.id;
 
@@ -107,11 +131,7 @@ const CheckoutPage = ({ params }: { params: { id: number } }) => {
         return;
       }
 
-      await axios.post(
-        `http://localhost:9090/product/revert-checkout`,
-        { userId },
-        { withCredentials: true }
-      );
+      await revertCheckout(userId);
 
       console.log("Checkout status reverted successfully");
     } catch (error) {

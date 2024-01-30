@@ -10,21 +10,29 @@ interface user {
 
 const About = () => {
   const [userProfile, setUserProfile] = useState<user | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUser = async () => {
+    try {
+      const url = "http://localhost:9090/user-profile";
+      const response = await axios.get(url, {
+        withCredentials: true,
+      });
+      setUserProfile(response.data);
+      console.log("user profile fetched successfully!");
+    } catch (error: any) {
+      console.error("Error fetching user profile", error.message);
+      setError("Error fetching user profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await axios.get(`http://localhost:9090/user-profile`, {
-          withCredentials: true,
-        });
-        setUserProfile(response.data);
-        console.log(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
     fetchUser();
   }, []);
+
   return (
     <section className="py-12">
       <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
