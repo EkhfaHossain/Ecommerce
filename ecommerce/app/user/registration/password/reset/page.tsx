@@ -1,20 +1,46 @@
 "use client";
 import React, { useState, ChangeEvent, useRef } from "react";
-import Link from "next/link";
-import axios from "axios";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import axios, { AxiosResponse } from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
-interface User {
+interface PasswordResetFormData {
   email: string;
   password: string;
   confirmPassword: string;
 }
+interface Router {
+  push(route: string): void;
+}
+interface PasswordResetResponse {
+  message: string;
+}
+
+export const resetPasswordService = async (
+  formData: PasswordResetFormData,
+  router: Router
+) => {
+  const url = "http://localhost:9090/password-reset";
+  console.log("Password Reset service called with formData:", formData);
+  const response: AxiosResponse<PasswordResetResponse> = await axios.post(
+    url,
+    formData
+  );
+  console.log("Password Reset service response:", response);
+  if (response.status === 200 || response.status === 201) {
+    console.log("Password Reset successfully!");
+    toast.success("Password Reset successfully!");
+    router.push("/user/registration/login");
+  } else {
+    toast.error("Password Reset failed");
+    console.error("Password Reset failed");
+  }
+};
 
 const passwordReset: React.FC = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState<User>({
+  const [formData, setFormData] = useState<PasswordResetFormData>({
     email: "",
     password: "",
     confirmPassword: "",
@@ -33,22 +59,14 @@ const passwordReset: React.FC = () => {
 
   const handlePasswordReset = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      console.log("Password do not Match!");
+      return;
+    }
     try {
-      if (formData.password !== formData.confirmPassword) {
-        console.log("Password do not Match!");
-        return;
-      }
-      const response = await axios.post(
-        "http://localhost:9090/password-reset",
-        formData
-      );
-      if (response.status === 200 || response.status === 201) {
-        console.log("Password Reset successfully!");
-        router.push("/");
-      } else {
-        console.error("Password Reset failed");
-      }
-    } catch (error) {
+      await resetPasswordService(formData, router);
+    } catch (error: any) {
       console.log(error);
     }
   };

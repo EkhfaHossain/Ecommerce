@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, ChangeEvent, useRef, useEffect } from "react";
 import Link from "next/link";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import {
   GoogleOAuthProvider,
   GoogleLogin,
@@ -12,14 +12,51 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 
-interface User {
+interface LoginFormData {
   email: string;
   password: string;
 }
 
+interface LoginResponse {
+  message: string;
+  token: string;
+}
+
+interface Router {
+  push(route: string): void;
+}
+
+export const loginService = async (
+  formData: LoginFormData,
+  router: Router
+): Promise<void> => {
+  try {
+    const url = "http://localhost:9090/login";
+    console.log("Login service called with formData:", formData);
+    const response: AxiosResponse<LoginResponse> = await axios.post(
+      url,
+      formData
+    );
+    console.log("Login service response:", response);
+
+    if (response.status === 200 || response.status === 201) {
+      console.log("Login successful!");
+      toast.success("Login successful!");
+      Cookies.set("token", response.data.token, { expires: 1 / 24 });
+      router.push("/");
+    } else {
+      console.error("Login failed");
+      toast.error("Login failed");
+    }
+  } catch (error: any) {
+    console.log(error);
+    toast.error("Login failed");
+  }
+};
+
 const login: React.FC = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState<User>({
+  const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
@@ -37,24 +74,8 @@ const login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      const response = await axios.post(
-        "http://localhost:9090/login",
-        formData
-      );
-      if (response.status === 200 || response.status === 201) {
-        console.log("Login successful!");
-        toast.success("Login successful!");
-        Cookies.set("token", response.data.token, { expires: 1 / 24 });
-        router.push("/");
-      } else {
-        console.error("Login failed");
-        toast.error("Login failed");
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error("Login failed");
-    }
+    console.log("Form submitted with data:", formData);
+    await loginService(formData, router);
   };
 
   const handleGoogleLoginSuccess = async (credentialResponse: any) => {
@@ -102,8 +123,6 @@ const login: React.FC = () => {
                   useOneTap
                 />
               </GoogleOAuthProvider>
-
-              {/* <GoogleButton></GoogleButton> */}
 
               <div className="mt-4 grid grid-cols-3 items-center text-gray-400">
                 <hr className="border-gray-400" />
