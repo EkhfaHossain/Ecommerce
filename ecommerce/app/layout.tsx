@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 // These styles apply to every route in the application
 import "./globals.css";
+import React from "react";
 import Header from "@/components/Header";
 import { Toaster } from "react-hot-toast";
 

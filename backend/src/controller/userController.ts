@@ -26,7 +26,10 @@ export const userRegistration = async (req: Request, res: Response) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({
+        error: "Registration failed",
+        message: "Email already exists. Please use a different email.",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -40,8 +43,8 @@ export const userRegistration = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(200).json(user);
-  } catch (error) {
+    res.status(200).json({ message: "Registration Successful!" });
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
